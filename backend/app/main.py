@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.models import *  # Ensure models are registered for create_all
+from app.models import User, MenuItem, SalesData  # noqa: F401
 
 # ---------------------------------------------------------------------------
 # Create tables — wrapped in try/except so the server starts even without

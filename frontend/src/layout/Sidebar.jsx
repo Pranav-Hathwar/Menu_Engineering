@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, UploadCloud, PieChart, Utensils } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, PieChart, Utensils, HelpCircle } from 'lucide-react';
 
 export const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = [
@@ -7,6 +7,7 @@ export const Sidebar = ({ isOpen, setIsOpen }) => {
         { path: '/upload', label: 'Data Input', icon: UploadCloud },
         { path: '/insights', label: 'AI Analytics', icon: PieChart },
         { path: '/menu', label: 'Catalog', icon: Utensils },
+        { path: '/about', label: 'How it Works', icon: HelpCircle },
     ];
 
     return (

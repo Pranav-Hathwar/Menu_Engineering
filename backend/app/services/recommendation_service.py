@@ -9,9 +9,9 @@ from datetime import date
 
 from app.services.analytics_service import get_menu_engineering_classification
 
-def get_recommendations(db: Session, start_date: Optional[date] = None, end_date: Optional[date] = None):
+def get_recommendations(db: Session, restaurant_name: Optional[str] = None, start_date: Optional[date] = None, end_date: Optional[date] = None):
     # Retrieve the deterministically scored items
-    classifications = get_menu_engineering_classification(db, start_date, end_date)
+    classifications = get_menu_engineering_classification(db, restaurant_name, start_date, end_date)
     
     recommendations = []
     

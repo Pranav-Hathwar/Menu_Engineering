@@ -10,98 +10,73 @@ from typing import Optional
 
 from app.models.sales import SalesData
 
-def get_sales_summary(db: Session, start_date: Optional[date] = None, end_date: Optional[date] = None):
-    """
-    Aggregates SalesData by item_name.
-    Calculates the sum of quantity and sum of revenue per item.
-    """
-    # Create the base aggregation query
+def get_sales_summary(db: Session, restaurant_name: Optional[str] = None, start_date: Optional[date] = None, end_date: Optional[date] = None):
     query = db.query(
         SalesData.item_name,
         func.sum(SalesData.quantity).label('total_quantity'),
         func.sum(SalesData.revenue).label('total_revenue')
     )
     
-    # Apply optional date filters before grouping
+    if restaurant_name:
+        query = query.filter(SalesData.restaurant_name == restaurant_name)
     if start_date:
         query = query.filter(SalesData.date >= start_date)
     if end_date:
         query = query.filter(SalesData.date <= end_date)
         
-    # Execute the aggregation
     results = query.group_by(SalesData.item_name).all()
     
-    # Format the results into a list of dictionaries matching the Pydantic schema
     summary = []
     for row in results:
         summary.append({
             "item_name": row.item_name,
-            # Handle potential None values if a group was fully empty (edge case)
             "total_quantity": row.total_quantity or 0,
             "total_revenue": row.total_revenue or 0.0
         })
         
     return summary
 
-def get_menu_engineering_classification(db: Session, start_date: Optional[date] = None, end_date: Optional[date] = None):
+def get_menu_engineering_classification(db: Session, restaurant_name: Optional[str] = None, start_date: Optional[date] = None, end_date: Optional[date] = None):
     """
     Classifies menu items into Stars, Plowhorses, Puzzles, and Dogs.
-    Uses outer joins securely to grab popularity from SalesData and cost metrics from MenuItem.
-    Returns classified dicts seamlessly matching the ItemClassification Pydantic schema.
+    Dynamically analyzes the uploaded raw Sales Data to calculate algorithmic Unit Revenue Proxies,
+    completely bypassing the need for manual catalog pre-configuration!
     """
-    from app.models.menu import MenuItem
-    
     query = db.query(
         SalesData.item_name,
         func.sum(SalesData.quantity).label('total_quantity'),
-        MenuItem.cost_price,
-        MenuItem.selling_price
-    ).outerjoin(
-        MenuItem, SalesData.item_name == MenuItem.item_name
+        func.sum(SalesData.revenue).label('total_revenue')
     )
     
+    if restaurant_name:
+        query = query.filter(SalesData.restaurant_name == restaurant_name)
     if start_date:
         query = query.filter(SalesData.date >= start_date)
     if end_date:
         query = query.filter(SalesData.date <= end_date)
         
-    results = query.group_by(
-        SalesData.item_name,
-        MenuItem.cost_price,
-        MenuItem.selling_price
-    ).all()
+    results = query.group_by(SalesData.item_name).all()
     
     valid_items = []
-    unlinked_items = []
-    
     total_popularity = 0
     total_profitability = 0
     
     for row in results:
         item_name = row.item_name
         qty = row.total_quantity or 0
+        rev = row.total_revenue or 0.0
         
-        # Edge case: Missing cost configuration (Unlinked Item)
-        # We flag it and skip applying it to the global averages
-        if row.cost_price is None or row.selling_price is None:
-            unlinked_items.append({
-                "item_name": item_name,
-                "total_quantity": qty,
-                "profit": 0.0,
-                "category": "Unlinked Item"
-            })
-            continue
-            
-        profit_margin = row.selling_price - row.cost_price
+        # Calculate theoretical unit profit (using Average Unit Revenue as the profitability proxy)
+        avg_unit_revenue = rev / qty if qty > 0 else 0
         
         total_popularity += qty
-        total_profitability += profit_margin
+        total_profitability += avg_unit_revenue
         
         valid_items.append({
             "item_name": item_name,
             "total_quantity": qty,
-            "profit": profit_margin,
-            "category": "" # To be scored
+            "profit": avg_unit_revenue,
+            "category": "" # To be dynamically scored
         })
         
     # Deterministic Global Metrics Mapping
@@ -109,7 +84,7 @@ def get_menu_engineering_classification(db: Session, start_date: Optional[date] 
     avg_pop = total_popularity / n_valid if n_valid > 0 else 0
     avg_prof = total_profitability / n_valid if n_valid > 0 else 0
     
-    # Apply Standard Classification Rules
+    # Apply Standard Classification Matrix Algorithms
     for item in valid_items:
         is_high_pop = item["total_quantity"] >= avg_pop
         is_high_prof = item["profit"] >= avg_prof
@@ -123,5 +98,4 @@ def get_menu_engineering_classification(db: Session, start_date: Optional[date] 
         else:
             item["category"] = "Dog"
             
-    # By returning left joined grouped items only, zero sales items are inherently excluded
-    return valid_items + unlinked_items
+    return valid_items

@@ -10,12 +10,13 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings
 
-# create_engine connects SQLAlchemy to PostgreSQL.
-# pool_pre_ping=True checks connection health before each use,
-# preventing "connection closed" errors in long-running servers.
+# create_engine dynamically bridges SQLite and PostgreSQL.
+connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
+
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
+    connect_args=connect_args
 )
 
 # SessionLocal is the factory for database sessions.

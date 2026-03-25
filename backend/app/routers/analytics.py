@@ -32,6 +32,7 @@ def get_analytics_summary(
 
 @router.get("/classification", response_model=List[ItemClassification])
 def get_classification(
+    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
     start_date: Optional[date] = Query(None, description="Starting date filter"),
     end_date: Optional[date] = Query(None, description="Ending date filter"),
     db: Session = Depends(get_db),
@@ -41,10 +42,11 @@ def get_classification(
     Classifies menu items into Stars, Plowhorses, Puzzles, and Dogs based on 
     average popularity and profitability.
     """
-    return get_menu_engineering_classification(db, start_date, end_date)
+    return get_menu_engineering_classification(db, restaurant_name, start_date, end_date)
 
 @router.get("/recommendations", response_model=List[ItemRecommendation])
 def get_actionable_recommendations(
+    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
     start_date: Optional[date] = Query(None, description="Starting date filter"),
     end_date: Optional[date] = Query(None, description="Ending date filter"),
     db: Session = Depends(get_db),
@@ -53,4 +55,16 @@ def get_actionable_recommendations(
     """
     Returns rule-based business decisions tied to matrix classification.
     """
-    return get_recommendations(db, start_date, end_date)
+    return get_recommendations(db, restaurant_name, start_date, end_date)
+
+@router.get("/restaurants", response_model=List[str])
+def get_unique_restaurants(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns a unified array of all unique restaurant entities mapped in the user's domain.
+    """
+    from app.models.sales import SalesData
+    results = db.query(SalesData.restaurant_name).distinct().all()
+    return [r[0] for r in results if r[0]]

@@ -11,11 +11,11 @@ class SalesData(Base):
     __tablename__ = "sales_data"
 
     id = Column(Integer, primary_key=True, index=True)
-    
+    restaurant_name = Column(String, index=True, nullable=False, default="Default Restaurant")
     # Storing the item_name directly is useful for historical snapshots (denormalization)
-    item_name = Column(String, index=True, nullable=False)
-    quantity = Column(Integer, nullable=False)
-    revenue = Column(Float, nullable=False)
+    item_name = Column(String, index=True)
+    quantity = Column(Integer, nullable=False, default=0)
+    revenue = Column(Float, nullable=False, default=0.0)
     date = Column(Date, index=True, nullable=False)
 
     # Linking to MenuItem creates a scalable relationship for deep analytics
