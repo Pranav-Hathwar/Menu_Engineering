@@ -141,7 +141,9 @@ export default function Catalog() {
                                     <th scope="col" className="px-6 py-4">Menu Item</th>
                                     <th scope="col" className="px-6 py-4 text-center">Category Group</th>
                                     <th scope="col" className="px-6 py-4 text-right">Units Sold</th>
-                                    <th scope="col" className="px-6 py-4 text-right">Unit Prov. Rev</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Unit COGS</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Total Revenue</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Total Profit</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/60">
@@ -164,8 +166,14 @@ export default function Catalog() {
                                         <td className="px-6 py-4 text-right font-semibold text-slate-600">
                                             {item.total_quantity.toLocaleString()}
                                         </td>
+                                        <td className="px-6 py-4 text-right font-mono font-medium text-red-600">
+                                            ₹{parseFloat(item.unit_cost).toFixed(2)}
+                                        </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
-                                            ${parseFloat(item.profit).toFixed(2)}
+                                            ₹{parseFloat(item.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/20">
+                                            ₹{parseFloat(item.profit * item.total_quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </td>
                                     </tr>
                                 ))}

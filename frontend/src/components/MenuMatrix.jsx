@@ -37,7 +37,7 @@ const Quadrant = ({ title, description, colorClass, items }) => (
                     </span>
                     <div className="text-right shrink-0 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
                         <span className="block text-[11px] font-medium text-slate-500 uppercase tracking-widest mb-0.5">Qty: <span className="text-slate-700 font-bold">{item.total_quantity}</span></span>
-                        <span className={`block text-xs font-bold ${colorClass.text}`}>Profit: ${parseFloat(item.profit).toFixed(2)}</span>
+                        <span className={`block text-xs font-bold ${colorClass.text}`}>Unit Profit: ₹{parseFloat(item.profit).toFixed(2)}</span>
                     </div>
                 </motion.div>
             ))}

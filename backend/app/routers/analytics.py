@@ -68,3 +68,31 @@ def get_unique_restaurants(
     from app.models.sales import SalesData
     results = db.query(SalesData.restaurant_name).distinct().all()
     return [r[0] for r in results if r[0]]
+
+@router.get("/raw")
+def get_raw_uploaded_data(
+    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
+    limit: int = 1000,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns the exact unaggregated raw row data from the uploaded file mapped directly in SQL.
+    """
+    from app.models.sales import SalesData
+    query = db.query(SalesData)
+    if restaurant_name:
+        query = query.filter(SalesData.restaurant_name == restaurant_name)
+        
+    # Sort strictly by ID descending to show the newest parsed rows immediately
+    results = query.order_by(SalesData.id.desc()).limit(limit).all()
+    
+    return [
+        {
+            "id": r.id,
+            "date": r.date,
+            "item_name": r.item_name,
+            "quantity": r.quantity,
+            "revenue": r.revenue
+        } for r in results
+    ]

@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import Insights from './pages/Insights';
 import Catalog from './pages/Catalog';
+import RawData from './pages/RawData';
 import About from './pages/About';
 import DashboardLayout from './layout/DashboardLayout';
 
@@ -29,6 +30,7 @@ function AppRoutes() {
             }>
                 <Route index element={<Dashboard />} />
                 <Route path="upload" element={<Upload />} />
+                <Route path="raw" element={<RawData />} />
                 <Route path="insights" element={<Insights />} />
                 <Route path="menu" element={<Catalog />} />
                 <Route path="about" element={<About />} />

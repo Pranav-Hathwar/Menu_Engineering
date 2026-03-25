@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, UploadCloud, PieChart, Utensils, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, PieChart, Utensils, HelpCircle, Database } from 'lucide-react';
 
 export const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = [
         { path: '/', label: 'Overview', icon: LayoutDashboard },
         { path: '/upload', label: 'Data Input', icon: UploadCloud },
+        { path: '/raw', label: 'Raw Data', icon: Database },
         { path: '/insights', label: 'AI Analytics', icon: PieChart },
         { path: '/menu', label: 'Catalog', icon: Utensils },
         { path: '/about', label: 'How it Works', icon: HelpCircle },

@@ -91,7 +91,7 @@ export default function Dashboard() {
                             </div>
                             <p className="text-sm font-semibold text-slate-500 mb-1 tracking-wide uppercase">Gross Matrix Revenue</p>
                             {loading ? <Skeleton className="h-9 w-32 mt-1" /> : (
-                                <h2 className="text-3xl font-extrabold text-slate-800">${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                                <h2 className="text-3xl font-extrabold text-slate-800">₹{totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
                             )}
                         </Card>
                         
@@ -140,7 +140,7 @@ export default function Dashboard() {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                                             <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
-                                            <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                                            <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
                                             <Tooltip 
                                                 cursor={{fill: '#f1f5f9'}} 
                                                 contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)'}}

@@ -45,7 +45,8 @@ def get_menu_engineering_classification(db: Session, restaurant_name: Optional[s
     query = db.query(
         SalesData.item_name,
         func.sum(SalesData.quantity).label('total_quantity'),
-        func.sum(SalesData.revenue).label('total_revenue')
+        func.sum(SalesData.revenue).label('total_revenue'),
+        func.sum(SalesData.unit_cost * SalesData.quantity).label('total_cost')
     )
     
     if restaurant_name:
@@ -65,17 +66,22 @@ def get_menu_engineering_classification(db: Session, restaurant_name: Optional[s
         item_name = row.item_name
         qty = row.total_quantity or 0
         rev = row.total_revenue or 0.0
+        cogs = row.total_cost or 0.0
         
-        # Calculate theoretical unit profit (using Average Unit Revenue as the profitability proxy)
+        # Calculate theoretical unit profit (Revenue - Cost per Unit)
         avg_unit_revenue = rev / qty if qty > 0 else 0
+        avg_unit_cost = cogs / qty if qty > 0 else 0
+        actual_profit_per_unit = avg_unit_revenue - avg_unit_cost
         
         total_popularity += qty
-        total_profitability += avg_unit_revenue
+        total_profitability += actual_profit_per_unit
         
         valid_items.append({
             "item_name": item_name,
             "total_quantity": qty,
-            "profit": avg_unit_revenue,
+            "total_revenue": rev,
+            "unit_cost": avg_unit_cost,
+            "profit": actual_profit_per_unit,
             "category": "" # To be dynamically scored
         })
         

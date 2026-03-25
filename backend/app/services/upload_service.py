@@ -91,6 +91,11 @@ def process_upload(file_bytes: bytes, filename: str, db: Session, restaurant_nam
             qty_cols = []
     if qty_cols:
         mapped_columns["quantity"] = qty_cols[0]
+        
+    # Cost Mapping
+    cost_cols = [c for c in df.columns if any(k in c for k in ['cost', 'cogs', 'expense', 'purchase'])]
+    if cost_cols:
+        mapped_columns["unit_cost"] = cost_cols[0]
     
     # Date Mapping
     date_cols = [c for c in df.columns if 'date' in c or 'time' in c or 'day' in c]
@@ -108,19 +113,24 @@ def process_upload(file_bytes: bytes, filename: str, db: Session, restaurant_nam
         df["quantity"] = 1
     if "date" not in df.columns:
         df["date"] = datetime.date.today()
+    if "unit_cost" not in df.columns:
+        df["unit_cost"] = 0.0
 
-    df = df[["item_name", "quantity", "revenue", "date"]]
+    df = df[["item_name", "quantity", "revenue", "unit_cost", "date"]]
 
     # Drop totally empty generic garbage items
     df = df.dropna(subset=["item_name"])
     df["item_name"] = df["item_name"].astype(str).str.strip().str.title()
     
-    # Money safety formatter: Clear currency symbols if interpreted as strings natively
+    # Handle Money safety formatter
     if df['revenue'].dtype == 'object':
-        df['revenue'] = df['revenue'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False)
+        df['revenue'] = df['revenue'].astype(str).str.replace('$', '', regex=False).str.replace('₹', '', regex=False).str.replace(',', '', regex=False)
+    if df['unit_cost'].dtype == 'object':
+        df['unit_cost'] = df['unit_cost'].astype(str).str.replace('$', '', regex=False).str.replace('₹', '', regex=False).str.replace(',', '', regex=False)
     
     # Enforce safe primitives
     df["revenue"] = pd.to_numeric(df["revenue"], errors='coerce').fillna(0.0).astype(float)
+    df["unit_cost"] = pd.to_numeric(df["unit_cost"], errors='coerce').fillna(0.0).astype(float)
     df["quantity"] = pd.to_numeric(df["quantity"], errors='coerce').fillna(1).astype(int)
 
     # Handle dates elegantly

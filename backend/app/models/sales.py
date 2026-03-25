@@ -16,6 +16,7 @@ class SalesData(Base):
     item_name = Column(String, index=True)
     quantity = Column(Integer, nullable=False, default=0)
     revenue = Column(Float, nullable=False, default=0.0)
+    unit_cost = Column(Float, nullable=False, default=0.0)
     date = Column(Date, index=True, nullable=False)
 
     # Linking to MenuItem creates a scalable relationship for deep analytics

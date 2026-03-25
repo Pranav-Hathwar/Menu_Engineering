@@ -13,6 +13,8 @@ class SalesSummary(BaseModel):
 class ItemClassification(BaseModel):
     item_name: str
     total_quantity: int
+    total_revenue: float
+    unit_cost: float
     profit: float
     category: str
 
