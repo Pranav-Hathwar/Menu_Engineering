@@ -1,98 +1,131 @@
-"""
-app/routers/analytics.py
+"""Authenticated analytics endpoints."""
 
-Exposes the aggregated analytics endpoints.
-"""
+from datetime import date
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import date
 
 from app.database import get_db
-from app.schemas.analytics import SalesSummary, ItemClassification, ItemRecommendation
-from app.services.analytics_service import get_sales_summary, get_menu_engineering_classification
-from app.services.recommendation_service import get_recommendations
+from app.models.sales import SalesData
 from app.models.user import User
+from app.schemas.analytics import BusinessInsight, ItemClassification, ItemRecommendation, SalesSummary
+from app.services.analytics_service import (
+    get_business_insights,
+    get_menu_engineering_classification,
+    get_sales_summary,
+)
 from app.services.auth_service import get_current_user
+from app.services.recommendation_service import get_recommendations
 
 router = APIRouter()
 
+
 @router.get("/summary", response_model=List[SalesSummary])
 def get_analytics_summary(
-    start_date: Optional[date] = Query(None, description="Starting date filter (YYYY-MM-DD)"),
-    end_date: Optional[date] = Query(None, description="Ending date filter (YYYY-MM-DD)"),
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    start_date: Optional[date] = Query(None, description="Starting date filter"),
+    end_date: Optional[date] = Query(None, description="Ending date filter"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Returns an aggregated summary of total quantity and total revenue per item.
-    """
-    summary = get_sales_summary(db, start_date, end_date)
-    return summary
+    return get_sales_summary(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
 
 @router.get("/classification", response_model=List[ItemClassification])
 def get_classification(
-    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
     start_date: Optional[date] = Query(None, description="Starting date filter"),
     end_date: Optional[date] = Query(None, description="Ending date filter"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Classifies menu items into Stars, Plowhorses, Puzzles, and Dogs based on 
-    average popularity and profitability.
-    """
-    return get_menu_engineering_classification(db, restaurant_name, start_date, end_date)
+    return get_menu_engineering_classification(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
 
 @router.get("/recommendations", response_model=List[ItemRecommendation])
 def get_actionable_recommendations(
-    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
     start_date: Optional[date] = Query(None, description="Starting date filter"),
     end_date: Optional[date] = Query(None, description="Ending date filter"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Returns rule-based business decisions tied to matrix classification.
-    """
-    return get_recommendations(db, restaurant_name, start_date, end_date)
+    return get_recommendations(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@router.get("/insights", response_model=List[BusinessInsight])
+def get_insights(
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    start_date: Optional[date] = Query(None, description="Starting date filter"),
+    end_date: Optional[date] = Query(None, description="Ending date filter"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_business_insights(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
 
 @router.get("/restaurants", response_model=List[str])
 def get_unique_restaurants(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Returns a unified array of all unique restaurant entities mapped in the user's domain.
-    """
-    from app.models.sales import SalesData
-    results = db.query(SalesData.restaurant_name).distinct().all()
+    results = (
+        db.query(SalesData.restaurant_name)
+        .filter(SalesData.owner_id == current_user.id)
+        .distinct()
+        .order_by(SalesData.restaurant_name.asc())
+        .all()
+    )
     return [r[0] for r in results if r[0]]
+
 
 @router.get("/raw")
 def get_raw_uploaded_data(
-    restaurant_name: Optional[str] = Query(None, description="Global tenant identifier"),
-    limit: int = 1000,
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    limit: int = Query(1000, ge=1, le=5000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Returns the exact unaggregated raw row data from the uploaded file mapped directly in SQL.
-    """
-    from app.models.sales import SalesData
-    query = db.query(SalesData)
+    query = db.query(SalesData).filter(SalesData.owner_id == current_user.id)
     if restaurant_name:
         query = query.filter(SalesData.restaurant_name == restaurant_name)
-        
-    # Sort strictly by ID descending to show the newest parsed rows immediately
+
     results = query.order_by(SalesData.id.desc()).limit(limit).all()
-    
+
     return [
         {
-            "id": r.id,
-            "date": r.date,
-            "item_name": r.item_name,
-            "quantity": r.quantity,
-            "revenue": r.revenue
-        } for r in results
+            "id": row.id,
+            "date": row.date,
+            "restaurant_name": row.restaurant_name,
+            "item_name": row.item_name,
+            "quantity": row.quantity,
+            "revenue": row.revenue,
+            "unit_cost": row.unit_cost,
+        }
+        for row in results
     ]

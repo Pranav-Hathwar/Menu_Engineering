@@ -1,11 +1,7 @@
-"""
-app/config.py
+"""Application settings loaded from environment variables and backend/.env."""
 
-Loads environment variables using pydantic-settings.
-All configuration is pulled from the .env file — never hardcoded.
-"""
-
-from pydantic_settings import BaseSettings
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -13,12 +9,27 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    APP_NAME: str = "MenuMind AI"
-    DEBUG: bool = True
+    APP_NAME: str = "MenuMind Pro"
+    DEBUG: bool = False
+    AUTO_CREATE_TABLES: bool = True
+    MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
+    LOGIN_MAX_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_SECONDS: int = 300
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @field_validator("DEBUG", "AUTO_CREATE_TABLES", mode="before")
+    @classmethod
+    def parse_boolish(cls, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "dev", "debug"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "prod", "production", "release"}:
+                return False
+        return value
 
 
-# Single instance — import this everywhere you need settings
 settings = Settings()

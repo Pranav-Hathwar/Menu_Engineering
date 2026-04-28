@@ -8,7 +8,7 @@ export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen bg-background text-slate-800 font-sans">
+        <div className="flex min-h-screen bg-background text-slate-800 font-sans surface-grid">
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <div className="flex-1 flex flex-col min-w-0">
                 <Topbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
@@ -25,7 +25,7 @@ export default function DashboardLayout() {
                     </div>
                     
                     {/* Global Developer Embedded Brand */}
-                    <footer className="w-full max-w-6xl mx-auto mt-16 pt-6 pb-2 border-t border-slate-100 text-center shrink-0">
+                    <footer className="w-full max-w-6xl mx-auto mt-16 pt-6 pb-2 border-t border-slate-200/70 text-center shrink-0">
                         <p className="text-sm font-medium text-slate-500 opacity-90">
                             Developed by <a href="https://github.com/Pranav-Hathwar" target="_blank" rel="noopener noreferrer" className="font-bold text-primary-600 hover:text-primary-700 hover:underline transition-all">Pranav Hathwar</a>
                         </p>

@@ -25,3 +25,10 @@ class ItemRecommendation(BaseModel):
     reason: str
     priority: str
     confidence: float
+
+
+class BusinessInsight(BaseModel):
+    title: str
+    value: str
+    detail: str
+    severity: str

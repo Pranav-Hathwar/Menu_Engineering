@@ -37,7 +37,7 @@ export default function RawData() {
                 </div>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Raw Uploaded Data</h1>
-                    <p className="text-slate-500 text-sm mt-1">A direct mirror of your uploaded spreadsheets securely parsed in the database.</p>
+                    <p className="text-slate-500 text-sm mt-1">A direct mirror of uploaded rows after normalization and validation.</p>
                 </div>
             </div>
 
@@ -84,7 +84,7 @@ export default function RawData() {
                                             {row.quantity.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
-                                            ₹{parseFloat(row.revenue).toFixed(2)}
+                                            Rs {parseFloat(row.revenue).toFixed(2)}
                                         </td>
                                     </tr>
                                 ))}

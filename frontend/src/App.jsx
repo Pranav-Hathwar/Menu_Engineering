@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import Insights from './pages/Insights';
@@ -9,7 +10,6 @@ import RawData from './pages/RawData';
 import About from './pages/About';
 import DashboardLayout from './layout/DashboardLayout';
 
-/** Secure boundary components securely trapping all unauthorized activity */
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -21,6 +21,7 @@ function AppRoutes() {
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             
             {/* Protected Route Group */}
             <Route path="/" element={

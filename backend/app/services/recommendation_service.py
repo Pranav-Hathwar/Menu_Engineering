@@ -1,61 +1,65 @@
-"""
-app/services/recommendation_service.py
+"""Rule-based business recommendations from menu classifications."""
 
-Provides standard rule-based business logic recommendations based on derived classifications.
-"""
-from sqlalchemy.orm import Session
-from typing import Optional
 from datetime import date
+from typing import Optional
+
+from sqlalchemy.orm import Session
 
 from app.services.analytics_service import get_menu_engineering_classification
 
-def get_recommendations(db: Session, restaurant_name: Optional[str] = None, start_date: Optional[date] = None, end_date: Optional[date] = None):
-    # Retrieve the deterministically scored items
-    classifications = get_menu_engineering_classification(db, restaurant_name, start_date, end_date)
-    
+
+def get_recommendations(
+    db: Session,
+    owner_id: int | None = None,
+    restaurant_name: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+):
+    classifications = get_menu_engineering_classification(
+        db, owner_id=owner_id, restaurant_name=restaurant_name, start_date=start_date, end_date=end_date
+    )
+
     recommendations = []
-    
     for item in classifications:
         category = item["category"]
-        name = item["item_name"]
-        
-        # Base response template mapping to Pydantic schema
         rec_data = {
-            "item_name": name,
+            "item_name": item["item_name"],
             "category": category,
             "recommendation": "",
             "reason": "",
             "priority": "Medium",
-            "confidence": 1.0  # As a strict rule-based algorithm, confidence is mathematically absolute (1.0).
+            "confidence": 0.86,
         }
-        
+
         if category == "Star":
-            rec_data["recommendation"] = "Promote this item. Feature it prominently on the menu."
-            rec_data["reason"] = "High demand and high profit margin."
-            rec_data["priority"] = "High"
-            
+            rec_data.update(
+                recommendation="Protect quality and feature this item in high-visibility menu positions.",
+                reason="High demand and high estimated per-unit profit.",
+                priority="High",
+                confidence=0.92,
+            )
         elif category == "Plowhorse":
-            rec_data["recommendation"] = "Increase price slightly OR reduce recipe cost."
-            rec_data["reason"] = "High demand but under-performing profit margin."
-            rec_data["priority"] = "High"
-            
+            rec_data.update(
+                recommendation="Test a small price increase, reduce waste, or redesign portions without hurting demand.",
+                reason="High demand but lower profit than the catalog average.",
+                priority="High",
+                confidence=0.88,
+            )
         elif category == "Puzzle":
-            rec_data["recommendation"] = "Improve visibility on the menu. Rename or market better."
-            rec_data["reason"] = "High profit margin but strictly low demand."
-            rec_data["priority"] = "Medium"
-            
+            rec_data.update(
+                recommendation="Improve menu placement, naming, photography, and staff prompts before discounting.",
+                reason="Healthy profit but demand is below the catalog average.",
+                priority="Medium",
+                confidence=0.84,
+            )
         elif category == "Dog":
-            rec_data["recommendation"] = "Consider removing item or completely reworking it."
-            rec_data["reason"] = "Low demand and low profit margin."
-            rec_data["priority"] = "Low"
-            
-        else:
-            # Handle Edge cases ("Unlinked Item") produced by analytics_service
-            rec_data["recommendation"] = "Define menu item cost and selling price in the items catalog."
-            rec_data["reason"] = "Missing pricing configuration."
-            rec_data["priority"] = "High"
-            rec_data["confidence"] = 0.0 # We have 0.0 confidence in any business decision without prices.
-            
+            rec_data.update(
+                recommendation="Remove, rework, or bundle this item unless it has strategic value.",
+                reason="Low demand and low estimated profit.",
+                priority="Low",
+                confidence=0.82,
+            )
+
         recommendations.append(rec_data)
-        
+
     return recommendations

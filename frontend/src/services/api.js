@@ -17,13 +17,11 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Graceful standard token expiration handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
             localStorage.removeItem('token');
-            // Forcefully return to login if JWT expires mimicking enterprise layouts
             window.location.href = '/login';
         }
         return Promise.reject(error);

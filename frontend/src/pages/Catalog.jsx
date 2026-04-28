@@ -47,22 +47,22 @@ export default function Catalog() {
     const getCategoryAdvice = (category) => {
         switch(category) {
             case 'Star': return {
-                title: '🌟 Star Management Strategy',
+                title: 'Star Management Strategy',
                 desc: 'These items drive your revenue. Maintain strict quality control, feature them prominently on your physical menu, and do not alter the recipe.',
                 color: 'text-emerald-800 bg-emerald-50 border-emerald-200'
             };
             case 'Plowhorse': return {
-                title: '🐎 Plowhorse Management Strategy',
+                title: 'Plowhorse Management Strategy',
                 desc: 'These are your traffic drivers but their margins are too slim. Carefully increase prices slightly, reduce portion sizes invisibly, or lower ingredient costs to improve margins without dropping volume.',
                 color: 'text-yellow-800 bg-yellow-50 border-yellow-200'
             };
             case 'Puzzle': return {
-                title: '🧩 Puzzle Management Strategy',
+                title: 'Puzzle Management Strategy',
                 desc: 'These have fantastic margins but no one buys them. Reposition them to high-visibility spots on the menu (top right), rename them to sound more appealing, or have waitstaff run daily promotions.',
                 color: 'text-blue-800 bg-blue-50 border-blue-200'
             };
             case 'Dog': return {
-                title: '🐕 Dog Management Strategy',
+                title: 'Dog Management Strategy',
                 desc: 'These items are actively draining your kitchen resources with zero payoff. Strongly consider removing them from the menu entirely, or completely overhauling their recipe and price tier.',
                 color: 'text-red-800 bg-red-50 border-red-200'
             };
@@ -77,8 +77,8 @@ export default function Catalog() {
                     <ListFilter className="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Global Item Catalog</h1>
-                    <p className="text-slate-500 text-sm mt-1">Direct tabular view of all extracted item streams and computational groupings.</p>
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Item Catalog</h1>
+                    <p className="text-slate-500 text-sm mt-1">Clean tabular view of normalized items, volumes, revenue, and margin signals.</p>
                 </div>
             </div>
 
@@ -167,13 +167,13 @@ export default function Catalog() {
                                             {item.total_quantity.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-red-600">
-                                            ₹{parseFloat(item.unit_cost).toFixed(2)}
+                                            Rs {parseFloat(item.unit_cost).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
-                                            ₹{parseFloat(item.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            Rs {parseFloat(item.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/20">
-                                            ₹{parseFloat(item.profit * item.total_quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            Rs {parseFloat(item.profit * item.total_quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </td>
                                     </tr>
                                 ))}

@@ -1,50 +1,36 @@
-"""
-app/main.py
+"""FastAPI application entry point."""
 
-The entry point of the FastAPI application.
-
-Responsibilities:
-  - Create the FastAPI app instance
-  - Configure CORS (so the React frontend can talk to this server)
-  - Register all routers
-  - Create DB tables on startup (dev only — production uses Alembic migrations)
-  - Mount a health-check route so you can verify the server is alive
-"""
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import engine, Base
-from app.models import User, MenuItem, SalesData  # noqa: F401
+from app.database import Base, SessionLocal, engine
+from app.models import MenuItem, SalesData, User  # noqa: F401
+from app.services.schema_service import ensure_runtime_schema
 
-# ---------------------------------------------------------------------------
-# Create tables — wrapped in try/except so the server starts even without
-# a live PostgreSQL connection (useful during local dev without a DB).
-# In production, use Alembic migrations instead.
-# ---------------------------------------------------------------------------
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    print(f"[WARNING] Could not connect to database on startup: {e}")
-    print("[WARNING] Server starting without DB — connect PostgreSQL and restart.")
+logging.basicConfig(
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# App instance
-# ---------------------------------------------------------------------------
+if settings.AUTO_CREATE_TABLES:
+    try:
+        Base.metadata.create_all(bind=engine)
+        ensure_runtime_schema(engine, SessionLocal)
+    except Exception:
+        logger.exception("Database initialization failed")
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Restaurant menu engineering and analytics platform",
-    version="0.1.0",
-    docs_url="/docs",       # Swagger UI
-    redoc_url="/redoc",     # ReDoc UI
+    version="0.2.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# ---------------------------------------------------------------------------
-# CORS
-# Allow the React dev server (port 5173 / 3000) to call this API.
-# In production, replace "*" origins with your actual domain.
-# ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -53,30 +39,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------------
-# Routers — add each feature router here as we build them
-from app.routers import auth, sales, upload, analytics
+from app.routers import analytics, auth, sales, upload  # noqa: E402
+
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(sales.router, prefix="/api/sales", tags=["Sales"])
 app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 
-# Future examples:
-#   from app.routers import upload, menu
-#   app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
-#   app.include_router(menu.router,   prefix="/api/menu",   tags=["Menu"])
-# ---------------------------------------------------------------------------
 
-
-# ---------------------------------------------------------------------------
-# Health check — always keep this alive
-# ---------------------------------------------------------------------------
 @app.get("/", tags=["Health"])
 def root():
     return {
         "status": "ok",
         "app": settings.APP_NAME,
-        "version": "0.1.0",
+        "version": "0.2.0",
     }
 
 

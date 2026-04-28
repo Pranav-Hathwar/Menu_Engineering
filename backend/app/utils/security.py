@@ -1,40 +1,33 @@
-"""
-app/utils/security.py
+"""Password hashing and JWT generation helpers."""
 
-Manages password hashing and JWT token generation/validation.
-"""
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext
-import jwt
-from app.config import settings
+from uuid import uuid4
 
 import bcrypt
+import jwt
+
+from app.config import settings
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies a plain password against the hashed version using bcrypt."""
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except (TypeError, ValueError):
+        return False
+
 
 def get_password_hash(password: str) -> str:
-    """Hashes a password using bcrypt."""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    """
-    Creates a JSON Web Token (JWT) for authentication.
-    
-    Args:
-        data: The payload to encode (usually the username/email).
-        expires_delta: Optional custom expiration time.
-    """
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    # Add expiration timestamp to the payload
-    to_encode.update({"exp": expire})
-    
-    # Generate the JWT using the secret key and defined algorithm
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode = {
+        **data,
+        "type": "access",
+        "iat": now,
+        "exp": expire,
+        "jti": str(uuid4()),
+    }
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

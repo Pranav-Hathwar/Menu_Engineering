@@ -18,8 +18,11 @@ class SalesData(Base):
     revenue = Column(Float, nullable=False, default=0.0)
     unit_cost = Column(Float, nullable=False, default=0.0)
     date = Column(Date, index=True, nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    upload_batch_id = Column(String, index=True, nullable=True)
 
     # Linking to MenuItem creates a scalable relationship for deep analytics
     menu_item_id = Column(Integer, ForeignKey("menu_items.id"), nullable=True)
-    
+
+    owner = relationship("User", back_populates="sales_records")
     menu_item = relationship("MenuItem", back_populates="sales")

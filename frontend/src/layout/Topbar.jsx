@@ -40,7 +40,7 @@ export const Topbar = ({ toggleSidebar }) => {
     };
     
     return (
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-20 w-full transition-all">
+        <header className="h-16 glass-panel border-b border-white/70 flex items-center justify-between px-4 md:px-8 sticky top-0 z-20 w-full transition-all">
             <button 
                 className="md:hidden p-2 -ml-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
                 onClick={toggleSidebar}
@@ -50,7 +50,7 @@ export const Topbar = ({ toggleSidebar }) => {
             <div className="flex items-center gap-4 ml-auto">
                 
                 {/* Global Multi-Tenant Navigator Form */}
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shrink-0">
+                <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-md shrink-0 shadow-sm">
                     <Store className="w-4 h-4 text-slate-400" />
                     <select 
                         className="bg-transparent border-none text-sm font-bold text-slate-700 outline-none w-32 cursor-pointer appearance-none truncate"
@@ -70,8 +70,8 @@ export const Topbar = ({ toggleSidebar }) => {
                     <p className="text-sm font-semibold text-slate-700">{user?.email || 'Admin User'}</p>
                     <p className="text-xs text-slate-500">MenuMind Administrator</p>
                 </div>
-                <div className="w-9 h-9 bg-primary-50 rounded-full flex items-center justify-center border border-primary-100 shrink-0 shadow-sm hidden sm:flex">
-                    <User className="w-5 h-5 text-primary-600" />
+                <div className="w-9 h-9 bg-ink-900 rounded-md flex items-center justify-center border border-ink-900 shrink-0 shadow-sm hidden sm:flex">
+                    <User className="w-5 h-5 text-primary-100" />
                 </div>
                 
                 <div className="w-px h-6 bg-slate-200 mx-2"></div>
