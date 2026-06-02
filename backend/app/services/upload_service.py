@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import datetime as dt
 import io
 import json
@@ -104,23 +105,57 @@ def _read_dataframe(file_bytes: bytes, filename: str) -> pd.DataFrame:
 
 
 def _read_csv_dataframe(file_bytes: bytes) -> pd.DataFrame:
-    last_error: Exception | None = None
-    for encoding in ("utf-8-sig", "utf-8", "latin1"):
-        try:
-            return pd.read_csv(
-                io.BytesIO(file_bytes),
-                sep=None,
-                engine="python",
-                encoding=encoding,
-                skip_blank_lines=True,
-            )
-        except Exception as exc:
-            last_error = exc
+    """Parse delimited text robustly, tolerating messy real-world exports.
+
+    Uses the stdlib csv module rather than pandas' CSV reader because POS
+    exports frequently have *ragged* rows (metadata/title rows with fewer
+    columns than the data rows). pandas raises "Expected N fields, saw M" on
+    those; csv.reader simply yields rows of varying length, which we pad to a
+    uniform width. Quoted fields containing the delimiter (e.g. "Rs 4,000")
+    are handled correctly.
+    """
+    text = _decode_bytes(file_bytes)
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+
+    delimiter = _sniff_delimiter(text)
 
     try:
-        return pd.read_csv(io.BytesIO(file_bytes), encoding="latin1", skip_blank_lines=True)
+        rows = [row for row in csv.reader(io.StringIO(text), delimiter=delimiter)]
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"CSV parsing failed: {last_error or exc}") from exc
+        raise HTTPException(status_code=400, detail=f"CSV parsing failed: {exc}") from exc
+
+    # Drop fully blank rows and pad ragged rows to the widest row.
+    rows = [row for row in rows if any(str(cell).strip() for cell in row)]
+    if not rows:
+        raise HTTPException(status_code=400, detail="The uploaded file has no data rows.")
+
+    width = max(len(row) for row in rows)
+    padded = [row + [None] * (width - len(row)) for row in rows]
+
+    # header=None: every row is data. _discover_headers promotes the real
+    # header row, so clean and messy files take the same path.
+    return pd.DataFrame(padded)
+
+
+def _decode_bytes(file_bytes: bytes) -> str:
+    for encoding in ("utf-8-sig", "utf-8", "latin1"):
+        try:
+            return file_bytes.decode(encoding)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return file_bytes.decode("latin1", errors="replace")
+
+
+def _sniff_delimiter(text: str) -> str:
+    sample = "\n".join(text.splitlines()[:50])
+    try:
+        return csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter
+    except Exception:
+        # Fall back to the most common delimiter present, defaulting to comma.
+        counts = {d: sample.count(d) for d in (",", ";", "\t", "|")}
+        best = max(counts, key=counts.get)
+        return best if counts[best] > 0 else ","
 
 
 def _read_json_dataframe(file_bytes: bytes) -> pd.DataFrame:

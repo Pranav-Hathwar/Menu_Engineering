@@ -25,7 +25,8 @@ uvicorn app.main:app --reload
 ```
 
 The API runs at **http://localhost:8000**.  
-The interactive API docs are at **http://localhost:8000/docs**.
+The interactive API docs are at **http://localhost:8000/docs**.  
+Health check: **http://localhost:8000/health**.
 
 > **SQLite (default):** Set `DATABASE_URL=sqlite:///./menumind.db` in `.env` — no extra setup needed.  
 > **PostgreSQL:** Run `docker compose up -d` inside `backend/`, then set `DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/menumind`.
@@ -68,7 +69,7 @@ ADMIN_EMAIL="owner@example.com" ADMIN_PASSWORD="StrongPass!123" python create_ad
 ## How the App Works
 
 ### Login
-Open **http://localhost:5173** and sign in with the credentials above. The app issues a JWT token stored in memory; all subsequent API calls are authenticated automatically.
+Open **http://localhost:5173** and sign in with the credentials above. The app issues a JWT access token, stored in the browser's `localStorage`; all subsequent API calls attach it automatically. A `401` response clears the token and redirects to the login page.
 
 ### Upload Sales Data
 Go to the **Upload** page. Drop a CSV, Excel, or JSON file exported from your POS system. The pipeline:
@@ -114,21 +115,67 @@ The **Recommendations** page surfaces rule-based insights:
 
 ---
 
+## Environment Variables
+
+All backend configuration lives in `backend/.env` (copy from `backend/.env.example`).
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | ✅ | — | SQLAlchemy URL. SQLite for dev, PostgreSQL for prod. |
+| `SECRET_KEY` | ✅ | — | JWT signing secret. Use a long random value. |
+| `ALGORITHM` | | `HS256` | JWT signing algorithm. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | | `60` | Access-token lifetime. |
+| `APP_NAME` | | `MenuMind Pro` | App name shown in API metadata. |
+| `DEBUG` | | `false` | Verbose logging when truthy. |
+| `AUTO_CREATE_TABLES` | | `true` | Auto-create tables on startup (dev convenience). |
+| `MAX_UPLOAD_BYTES` | | `10485760` | Max upload size (10 MB). |
+| `LOGIN_MAX_ATTEMPTS` | | `5` | Failed logins before lockout. |
+| `LOGIN_LOCKOUT_SECONDS` | | `300` | Lockout window in seconds. |
+| `CORS_ORIGINS` | | `http://localhost:5173,http://localhost:3000` | Comma-separated allowed browser origins. **Add your production frontend URL before deploying.** |
+
+The frontend needs no `.env`: in dev it proxies `/api` to `http://localhost:8000` (see `vite.config.js`); in the Docker image nginx proxies `/api` to the backend container.
+
+---
+
+## Docker (full stack)
+
+From the `backend/` directory:
+
+```bash
+docker compose up --build
+```
+
+This starts PostgreSQL, the API (`http://localhost:8000`), and the built frontend behind nginx (`http://localhost:8080`). Set a real `SECRET_KEY` in `backend/docker-compose.yml` before any non-local use.
+
+---
+
 ## Tests
 
 ```bash
-# Backend
+# Backend (unit tests live in backend/tests/)
 cd backend
 venv\Scripts\activate
 pytest
 
-# Frontend type-check / build
+# Frontend production build
 cd frontend
 npm run build
+```
+
+Manual/smoke helpers (require a running server) live in `backend/scripts/`:
+
+```bash
+cd backend
+python scripts/health_check.py     # ping the running API
+python scripts/check_process.py    # run the upload pipeline in-process
 ```
 
 ---
 
 ## Production Notes
 
-Before deploying: add Alembic migrations, a production Dockerfile for backend and frontend, CI pipeline, managed secrets, HTTPS, rate limiting, and observability.
+The app ships with rate-limited login, bcrypt password hashing, owner-scoped data,
+env-driven CORS, a `/health` endpoint, and split production bundles. Before a serious
+deployment, also add: Alembic migrations (replacing the runtime schema guard), managed
+secrets, HTTPS/TLS termination, a CI pipeline, and observability (structured logs +
+metrics).

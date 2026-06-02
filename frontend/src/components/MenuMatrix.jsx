@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { asArray, decimal, integer, text } from '../utils/format';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -25,21 +26,21 @@ const Quadrant = ({ title, description, colorClass, items }) => (
             initial="hidden"
             animate="show"
         >
-            {items.map(item => (
+            {items.map((item, index) => (
                 <motion.div
-                    key={item.item_name}
+                    key={`${text(item?.item_name, 'item')}-${index}`}
                     variants={itemVariants}
                     whileHover={{ scale: 1.01 }}
                     className="p-4 bg-white rounded-md shadow-sm border border-slate-100 flex justify-between items-center cursor-pointer transition-all hover:shadow-md hover:border-slate-300 group"
                 >
-                    <span className="font-bold text-slate-800 text-sm truncate mr-3 group-hover:text-primary-700 transition-colors" title={item.item_name}>
-                        {item.item_name}
+                    <span className="font-bold text-slate-800 text-sm truncate mr-3 group-hover:text-primary-700 transition-colors" title={text(item?.item_name, 'Unnamed item')}>
+                        {text(item?.item_name, 'Unnamed item')}
                     </span>
                     <div className="text-right shrink-0 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                         <span className="block text-[11px] font-medium text-slate-500 uppercase tracking-widest mb-0.5">
-                            Qty: <span className="text-slate-700 font-bold">{item.total_quantity}</span>
+                            Qty: <span className="text-slate-700 font-bold">{integer(item?.total_quantity)}</span>
                         </span>
-                        <span className={`block text-xs font-bold ${colorClass.text}`}>Unit Profit: Rs {parseFloat(item.profit).toFixed(2)}</span>
+                        <span className={`block text-xs font-bold ${colorClass.text}`}>Unit Profit: Rs {decimal(item?.profit)}</span>
                     </div>
                 </motion.div>
             ))}
@@ -57,10 +58,11 @@ const Quadrant = ({ title, description, colorClass, items }) => (
 );
 
 export const MenuMatrix = ({ classifications = [] }) => {
-    const stars = classifications.filter(c => c.category === "Star");
-    const plowhorses = classifications.filter(c => c.category === "Plowhorse");
-    const puzzles = classifications.filter(c => c.category === "Puzzle");
-    const dogs = classifications.filter(c => c.category === "Dog");
+    const safe = asArray(classifications);
+    const stars = safe.filter(c => c?.category === "Star");
+    const plowhorses = safe.filter(c => c?.category === "Plowhorse");
+    const puzzles = safe.filter(c => c?.category === "Puzzle");
+    const dogs = safe.filter(c => c?.category === "Dog");
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-full">

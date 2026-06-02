@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SalesDataBase(BaseModel):
@@ -21,9 +21,8 @@ class SalesDataCreate(SalesDataBase):
 
 
 class SalesDataResponse(SalesDataBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     owner_id: Optional[int] = None
     upload_batch_id: Optional[str] = None
-
-    class Config:
-        from_attributes = True

@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, File, UploadCloud } from 'lucide-react';
 import api from '../services/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { getErrorMessage, integer, money } from '../utils/format';
 
 export default function Upload() {
     const [file, setFile] = useState(null);
@@ -43,7 +44,7 @@ export default function Upload() {
         } catch (error) {
             setStatus('error');
             setResult(null);
-            setMessage(error.response?.data?.detail || 'Failed to process file. Upload CSV, Excel, or JSON with item, quantity, revenue, and optional cost/date fields.');
+            setMessage(getErrorMessage(error, 'Failed to process file. Upload CSV, Excel, or JSON with item, quantity, revenue, and optional cost/date fields.'));
         } finally {
             setLoading(false);
         }
@@ -150,10 +151,10 @@ function StatusPanel({ type, title, message, result }) {
                 <p className="text-sm mt-1 opacity-90">{message}</p>
                 {result && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                        <MiniStat label="Rows" value={result.rows_ingested} />
-                        <MiniStat label="Rejected" value={result.rows_rejected} />
-                        <MiniStat label="Revenue" value={`Rs ${Number(result.total_revenue || 0).toLocaleString()}`} />
-                        <MiniStat label="Units" value={result.total_units} />
+                        <MiniStat label="Rows" value={integer(result?.rows_ingested)} />
+                        <MiniStat label="Rejected" value={integer(result?.rows_rejected)} />
+                        <MiniStat label="Revenue" value={money(result?.total_revenue)} />
+                        <MiniStat label="Units" value={integer(result?.total_units)} />
                     </div>
                 )}
             </div>

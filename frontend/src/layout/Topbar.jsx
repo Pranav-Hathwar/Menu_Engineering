@@ -2,6 +2,7 @@ import { useAuth } from '../hooks/useAuth';
 import { LogOut, User, Menu, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { asArray } from '../utils/format';
 
 export const Topbar = ({ toggleSidebar }) => {
     const { user, logout } = useAuth();
@@ -11,17 +12,18 @@ export const Topbar = ({ toggleSidebar }) => {
     const fetchRestaurants = async () => {
         try {
             const res = await api.get('/analytics/restaurants');
-            setRestaurants(res.data);
-            
+            const list = asArray(res.data).filter(Boolean);
+            setRestaurants(list);
+
             // Auto inject active selection locally if blank
-            if (res.data.length > 0 && !localStorage.getItem('activeRestaurant')) {
-                const first = res.data[0];
+            if (list.length > 0 && !localStorage.getItem('activeRestaurant')) {
+                const first = list[0];
                 localStorage.setItem('activeRestaurant', first);
                 setActive(first);
                 window.dispatchEvent(new Event('restaurantChanged'));
             }
         } catch (e) {
-            console.error("Failed to load generic tenants:", e);
+            console.error("Failed to load restaurants:", e);
         }
     };
 

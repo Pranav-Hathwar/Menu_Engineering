@@ -8,6 +8,7 @@ import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
+import { asArray, getErrorMessage, text } from '../utils/format';
 
 export default function Insights() {
     const activeRestaurant = useActiveRestaurant();
@@ -29,11 +30,11 @@ export default function Insights() {
                     api.get(`/analytics/recommendations?${query}`),
                     api.get(`/analytics/insights?${query}`),
                 ]);
-                setRecommendations(recommendationResponse.data);
-                setInsights(insightResponse.data);
+                setRecommendations(asArray(recommendationResponse.data));
+                setInsights(asArray(insightResponse.data));
                 setError(null);
             } catch (err) {
-                setError(err.response?.data?.detail || "Failed to load recommendations.");
+                setError(getErrorMessage(err, "Failed to load recommendations."));
             } finally {
                 setLoading(false);
             }
@@ -100,12 +101,12 @@ export default function Insights() {
                 <>
                     {insights.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-                            {insights.map((insight) => (
-                                <Card key={insight.title} className="p-4">
+                            {insights.map((insight, index) => (
+                                <Card key={`${text(insight?.title, 'insight')}-${index}`} className="p-4">
                                     <LineChart className="w-4 h-4 text-primary-600 mb-3" />
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{insight.title}</p>
-                                    <p className="font-black text-slate-900 mt-2 leading-tight">{insight.value}</p>
-                                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{insight.detail}</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{text(insight?.title)}</p>
+                                    <p className="font-black text-slate-900 mt-2 leading-tight">{text(insight?.value)}</p>
+                                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{text(insight?.detail)}</p>
                                 </Card>
                             ))}
                         </div>
@@ -113,32 +114,32 @@ export default function Insights() {
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 gap-5">
                         {recommendations.map((rec, index) => (
-                            <Card key={`${rec.item_name}-${index}`} animate hover className="p-6 border-slate-100 flex flex-col justify-between h-full bg-white shadow-sm hover:shadow-md transition-all">
+                            <Card key={`${text(rec?.item_name, 'item')}-${index}`} animate hover className="p-6 border-slate-100 flex flex-col justify-between h-full bg-white shadow-sm hover:shadow-md transition-all">
                                 <div>
                                     <div className="flex justify-between items-start gap-3 mb-4">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            {getCategoryIcon(rec.category)}
-                                            <h3 className="font-black text-slate-900 text-lg truncate" title={rec.item_name}>
-                                                {rec.item_name}
+                                            {getCategoryIcon(rec?.category)}
+                                            <h3 className="font-black text-slate-900 text-lg truncate" title={text(rec?.item_name, 'Unnamed item')}>
+                                                {text(rec?.item_name, 'Unnamed item')}
                                             </h3>
                                         </div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${getPriorityColor(rec.priority)}`}>
-                                            {rec.priority}
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${getPriorityColor(rec?.priority)}`}>
+                                            {text(rec?.priority, 'Medium')}
                                         </span>
                                     </div>
 
                                     <div className="bg-slate-50 p-4 rounded-md border border-slate-100 mb-4">
-                                        <p className="text-sm font-semibold text-slate-900 leading-snug">{rec.recommendation}</p>
+                                        <p className="text-sm font-semibold text-slate-900 leading-snug">{text(rec?.recommendation, 'No recommendation available.')}</p>
                                     </div>
                                     <p className="text-xs text-slate-500 font-medium mb-4">
-                                        <span className="font-bold text-slate-700">Why:</span> {rec.reason}
+                                        <span className="font-bold text-slate-700">Why:</span> {text(rec?.reason)}
                                     </p>
                                 </div>
 
                                 <div className="mt-auto border-t border-slate-100 pt-4 flex justify-between items-center">
                                     <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Classified As</span>
                                     <Badge type="default" className="bg-slate-100 text-slate-700 border-slate-200">
-                                        {rec.category}
+                                        {text(rec?.category, 'Unclassified')}
                                     </Badge>
                                 </div>
                             </Card>

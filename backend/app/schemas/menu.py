@@ -3,7 +3,7 @@ app/schemas/menu.py
 
 Pydantic schemas for the MenuItem model.
 """
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class MenuItemBase(BaseModel):
     item_name: str
@@ -14,7 +14,6 @@ class MenuItemCreate(MenuItemBase):
     pass
 
 class MenuItemResponse(MenuItemBase):
-    id: int
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: int

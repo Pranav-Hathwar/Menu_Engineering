@@ -5,6 +5,7 @@ import { EmptyState } from '../ui/EmptyState';
 import api from '../services/api';
 import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
 import { Database, AlertCircle } from 'lucide-react';
+import { asArray, getErrorMessage, integer, money, text } from '../utils/format';
 
 export default function RawData() {
     const activeRestaurant = useActiveRestaurant();
@@ -18,10 +19,10 @@ export default function RawData() {
             setLoading(true);
             try {
                 const response = await api.get(`/analytics/raw?restaurant_name=${encodeURIComponent(activeRestaurant)}`);
-                setRows(response.data);
+                setRows(asArray(response.data));
                 setError(null);
             } catch (err) {
-                setError(err.response?.data?.detail || "Failed to load raw file data.");
+                setError(getErrorMessage(err, "Failed to load raw file data."));
             } finally {
                 setLoading(false);
             }
@@ -69,22 +70,22 @@ export default function RawData() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/60">
-                                {rows.map((row) => (
-                                    <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                                {rows.map((row, index) => (
+                                    <tr key={row?.id ?? index} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 text-xs font-mono text-slate-400">
-                                            #{row.id}
+                                            #{text(row?.id, index + 1)}
                                         </td>
                                         <td className="px-6 py-4 text-slate-600">
-                                            {row.date}
+                                            {text(row?.date)}
                                         </td>
                                         <td className="px-6 py-4 font-bold text-slate-700">
-                                            {row.item_name}
+                                            {text(row?.item_name, 'Unnamed item')}
                                         </td>
                                         <td className="px-6 py-4 text-right font-semibold text-slate-600">
-                                            {row.quantity.toLocaleString()}
+                                            {integer(row?.quantity)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
-                                            Rs {parseFloat(row.revenue).toFixed(2)}
+                                            {money(row?.revenue)}
                                         </td>
                                     </tr>
                                 ))}

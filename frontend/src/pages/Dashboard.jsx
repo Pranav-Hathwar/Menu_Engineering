@@ -9,8 +9,7 @@ import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
-
-const money = (value) => `Rs ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { asArray, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
 
 export default function Dashboard() {
     const activeRestaurant = useActiveRestaurant();
@@ -35,11 +34,11 @@ export default function Dashboard() {
                     api.get(`/analytics/classification?${query}`),
                     api.get(`/analytics/insights?${query}`),
                 ]);
-                setClassifications(classificationResponse.data);
-                setInsights(insightsResponse.data);
+                setClassifications(asArray(classificationResponse.data));
+                setInsights(asArray(insightsResponse.data));
                 setError(null);
             } catch (err) {
-                setError(err.response?.data?.detail || "Failed to load analytics. Check the backend connection and selected restaurant.");
+                setError(getErrorMessage(err, "Failed to load analytics. Check the backend connection and selected restaurant."));
             } finally {
                 setLoading(false);
             }
@@ -50,20 +49,20 @@ export default function Dashboard() {
     const topPerformer = useMemo(() => {
         if (!classifications.length) return null;
         return classifications.reduce((prev, current) =>
-            (prev.profit * prev.total_quantity > current.profit * current.total_quantity) ? prev : current
+            (toNumber(prev?.profit) * toNumber(prev?.total_quantity) > toNumber(current?.profit) * toNumber(current?.total_quantity)) ? prev : current
         );
     }, [classifications]);
 
-    const totalProfit = classifications.reduce((sum, item) => sum + (item.profit * item.total_quantity), 0);
-    const totalRevenue = classifications.reduce((sum, item) => sum + item.total_revenue, 0);
-    const totalVolume = classifications.reduce((sum, item) => sum + item.total_quantity, 0);
+    const totalProfit = classifications.reduce((sum, item) => sum + (toNumber(item?.profit) * toNumber(item?.total_quantity)), 0);
+    const totalRevenue = classifications.reduce((sum, item) => sum + toNumber(item?.total_revenue), 0);
+    const totalVolume = classifications.reduce((sum, item) => sum + toNumber(item?.total_quantity), 0);
 
     const chartData = useMemo(() => {
         return classifications
             .map(item => ({
-                name: item.item_name,
-                revenue: Number(item.total_revenue.toFixed(2)),
-                profit: Number((item.profit * item.total_quantity).toFixed(2)),
+                name: text(item?.item_name, 'Unnamed'),
+                revenue: Number(toNumber(item?.total_revenue).toFixed(2)),
+                profit: Number((toNumber(item?.profit) * toNumber(item?.total_quantity)).toFixed(2)),
             }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 6);
@@ -71,7 +70,7 @@ export default function Dashboard() {
 
     const pieData = useMemo(() => {
         const counts = { Star: 0, Plowhorse: 0, Puzzle: 0, Dog: 0 };
-        classifications.forEach(c => { if (counts[c.category] !== undefined) counts[c.category]++; });
+        classifications.forEach(c => { if (counts[c?.category] !== undefined) counts[c.category]++; });
         return [
             { name: 'Stars', value: counts.Star, color: '#0f9f7a' },
             { name: 'Plowhorses', value: counts.Plowhorse, color: '#d79d16' },
@@ -118,17 +117,17 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                         <MetricCard icon={DollarSign} label="Total Revenue" loading={loading} value={money(totalRevenue)} />
                         <MetricCard icon={TrendingUp} label="Estimated Gross Profit" loading={loading} value={money(totalProfit)} />
-                        <MetricCard icon={PackageOpen} label="Units Sold" loading={loading} value={totalVolume.toLocaleString()} />
-                        <MetricCard icon={Sparkles} label="Top Profit Driver" loading={loading} value={topPerformer?.item_name || 'No Data'} highlight />
+                        <MetricCard icon={PackageOpen} label="Units Sold" loading={loading} value={integer(totalVolume)} />
+                        <MetricCard icon={Sparkles} label="Top Profit Driver" loading={loading} value={text(topPerformer?.item_name, 'No Data')} highlight />
                     </div>
 
                     {insights.length > 0 && (
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                            {insights.slice(0, 5).map((insight) => (
-                                <Card key={insight.title} className="p-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{insight.title}</p>
-                                    <p className="font-extrabold text-slate-900 mt-2 leading-tight">{insight.value}</p>
-                                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{insight.detail}</p>
+                            {insights.slice(0, 5).map((insight, index) => (
+                                <Card key={`${text(insight?.title, 'insight')}-${index}`} className="p-4">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{text(insight?.title)}</p>
+                                    <p className="font-extrabold text-slate-900 mt-2 leading-tight">{text(insight?.value)}</p>
+                                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{text(insight?.detail)}</p>
                                 </Card>
                             ))}
                         </div>

@@ -1,5 +1,10 @@
-from app.database import SessionLocal
-from app.services.analytics_service import get_menu_engineering_classification
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.database import SessionLocal  # noqa: E402
+from app.services.analytics_service import get_menu_engineering_classification  # noqa: E402
 
 def verify_accuracy():
     db = SessionLocal()

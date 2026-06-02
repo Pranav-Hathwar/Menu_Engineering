@@ -5,6 +5,7 @@ import { EmptyState } from '../ui/EmptyState';
 import api from '../services/api';
 import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
 import { AlertCircle, ListFilter } from 'lucide-react';
+import { asArray, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
 
 export default function Catalog() {
     const activeRestaurant = useActiveRestaurant();
@@ -22,11 +23,11 @@ export default function Catalog() {
             setLoading(true);
             try {
                 const response = await api.get(`/analytics/classification?restaurant_name=${encodeURIComponent(activeRestaurant)}`);
-                const sorted = response.data.sort((a, b) => b.total_quantity - a.total_quantity);
+                const sorted = asArray(response.data).sort((a, b) => toNumber(b?.total_quantity) - toNumber(a?.total_quantity));
                 setItems(sorted);
                 setError(null);
             } catch (err) {
-                setError(err.response?.data?.detail || "Failed to load Catalog data.");
+                setError(getErrorMessage(err, "Failed to load Catalog data."));
             } finally {
                 setLoading(false);
             }
@@ -149,31 +150,31 @@ export default function Catalog() {
                             <tbody className="divide-y divide-slate-100/60">
                                 {items
                                     .filter(item => {
-                                        const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-                                        const matchesCat = filterCategory === 'All' ? true : item.category === filterCategory;
+                                        const matchesSearch = text(item?.item_name, '').toLowerCase().includes(searchTerm.toLowerCase());
+                                        const matchesCat = filterCategory === 'All' ? true : item?.category === filterCategory;
                                         return matchesSearch && matchesCat;
                                     })
                                     .map((item, index) => (
                                     <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 font-bold text-slate-700">
-                                            {item.item_name}
+                                            {text(item?.item_name, 'Unnamed item')}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ring-1 ring-inset ${getMatrixColor(item.category)}`}>
-                                                {item.category}
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ring-1 ring-inset ${getMatrixColor(item?.category)}`}>
+                                                {text(item?.category, 'Unclassified')}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right font-semibold text-slate-600">
-                                            {item.total_quantity.toLocaleString()}
+                                            {integer(item?.total_quantity)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-red-600">
-                                            Rs {parseFloat(item.unit_cost).toFixed(2)}
+                                            {money(item?.unit_cost)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
-                                            Rs {parseFloat(item.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            {money(item?.total_revenue)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/20">
-                                            Rs {parseFloat(item.profit * item.total_quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                            {money(toNumber(item?.profit) * toNumber(item?.total_quantity))}
                                         </td>
                                     </tr>
                                 ))}

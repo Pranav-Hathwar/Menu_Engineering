@@ -15,8 +15,14 @@ class Settings(BaseSettings):
     MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
     LOGIN_MAX_ATTEMPTS: int = 5
     LOGIN_LOCKOUT_SECONDS: int = 300
+    # Comma-separated list of allowed browser origins for CORS.
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     @field_validator("DEBUG", "AUTO_CREATE_TABLES", mode="before")
     @classmethod
