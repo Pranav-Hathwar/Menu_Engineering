@@ -1,0 +1,605 @@
+order_date,item_name,quantity,revenue,unit_cost
+2026-06-01,Paneer Butter Masala,15,4800,95
+2026-06-01,Chicken Biryani,21,7980,120
+2026-06-01,Mutton Rogan Josh,20,8400,150
+2026-06-01,Tandoori Chicken,17,6120,120
+2026-06-01,Paneer Tikka Masala,14,4760,110
+2026-06-01,Veg Fried Rice,14,2800,140
+2026-06-01,Masala Papad,18,900,38
+2026-06-01,Plain Lassi,16,1280,58
+2026-06-01,Steam Rice,23,2070,68
+2026-06-01,Gulab Jamun,15,1200,60
+2026-06-01,Truffle Pasta,4,2200,140
+2026-06-01,Grilled Salmon,2,1500,220
+2026-06-01,Cheese Burst Pizza,3,1440,130
+2026-06-01,Belgian Waffle,4,1280,80
+2026-06-01,Mango Cheesecake,3,840,65
+2026-06-01,Veg Sandwich,3,360,95
+2026-06-01,Plain Khichdi,4,400,78
+2026-06-01,Buttermilk,3,120,30
+2026-06-01,Jeera Rice,1,130,105
+2026-06-01,Papad Fry,1,45,36
+2026-06-02,Paneer Butter Masala,24,7680,95
+2026-06-02,Chicken Biryani,26,9880,120
+2026-06-02,Mutton Rogan Josh,27,11340,150
+2026-06-02,Tandoori Chicken,15,5400,120
+2026-06-02,Paneer Tikka Masala,24,8160,110
+2026-06-02,Veg Fried Rice,14,2800,140
+2026-06-02,Masala Papad,22,1100,38
+2026-06-02,Plain Lassi,16,1280,58
+2026-06-02,Steam Rice,24,2160,68
+2026-06-02,Gulab Jamun,16,1280,60
+2026-06-02,Truffle Pasta,4,2200,140
+2026-06-02,Grilled Salmon,2,1500,220
+2026-06-02,Cheese Burst Pizza,3,1440,130
+2026-06-02,Belgian Waffle,3,960,80
+2026-06-02,Mango Cheesecake,5,1400,65
+2026-06-02,Veg Sandwich,2,240,95
+2026-06-02,Plain Khichdi,1,100,78
+2026-06-02,Buttermilk,1,40,30
+2026-06-02,Jeera Rice,4,520,105
+2026-06-02,Papad Fry,2,90,36
+2026-06-03,Paneer Butter Masala,23,7360,95
+2026-06-03,Chicken Biryani,29,11020,120
+2026-06-03,Mutton Rogan Josh,26,10920,150
+2026-06-03,Tandoori Chicken,18,6480,120
+2026-06-03,Paneer Tikka Masala,25,8500,110
+2026-06-03,Veg Fried Rice,20,4000,140
+2026-06-03,Masala Papad,17,850,38
+2026-06-03,Plain Lassi,14,1120,58
+2026-06-03,Steam Rice,14,1260,68
+2026-06-03,Gulab Jamun,22,1760,60
+2026-06-03,Truffle Pasta,3,1650,140
+2026-06-03,Grilled Salmon,5,3750,220
+2026-06-03,Cheese Burst Pizza,5,2400,130
+2026-06-03,Belgian Waffle,5,1600,80
+2026-06-03,Mango Cheesecake,7,1960,65
+2026-06-03,Veg Sandwich,1,120,95
+2026-06-03,Plain Khichdi,1,100,78
+2026-06-03,Buttermilk,3,120,30
+2026-06-03,Jeera Rice,3,390,105
+2026-06-03,Papad Fry,4,180,36
+2026-06-04,Paneer Butter Masala,17,5440,95
+2026-06-04,Chicken Biryani,26,9880,120
+2026-06-04,Mutton Rogan Josh,20,8400,150
+2026-06-04,Tandoori Chicken,20,7200,120
+2026-06-04,Paneer Tikka Masala,26,8840,110
+2026-06-04,Veg Fried Rice,21,4200,140
+2026-06-04,Masala Papad,13,650,38
+2026-06-04,Plain Lassi,14,1120,58
+2026-06-04,Steam Rice,27,2430,68
+2026-06-04,Gulab Jamun,12,960,60
+2026-06-04,Truffle Pasta,4,2200,140
+2026-06-04,Grilled Salmon,4,3000,220
+2026-06-04,Cheese Burst Pizza,4,1920,130
+2026-06-04,Belgian Waffle,3,960,80
+2026-06-04,Mango Cheesecake,2,560,65
+2026-06-04,Veg Sandwich,4,480,95
+2026-06-04,Plain Khichdi,2,200,78
+2026-06-04,Buttermilk,5,200,30
+2026-06-04,Jeera Rice,2,260,105
+2026-06-04,Papad Fry,5,225,36
+2026-06-05,Paneer Butter Masala,22,7040,95
+2026-06-05,Chicken Biryani,31,11780,120
+2026-06-05,Mutton Rogan Josh,26,10920,150
+2026-06-05,Tandoori Chicken,26,9360,120
+2026-06-05,Paneer Tikka Masala,19,6460,110
+2026-06-05,Veg Fried Rice,12,2400,140
+2026-06-05,Masala Papad,15,750,38
+2026-06-05,Plain Lassi,10,800,58
+2026-06-05,Steam Rice,19,1710,68
+2026-06-05,Gulab Jamun,15,1200,60
+2026-06-05,Truffle Pasta,3,1650,140
+2026-06-05,Grilled Salmon,3,2250,220
+2026-06-05,Cheese Burst Pizza,5,2400,130
+2026-06-05,Belgian Waffle,3,960,80
+2026-06-05,Mango Cheesecake,6,1680,65
+2026-06-05,Veg Sandwich,2,240,95
+2026-06-05,Plain Khichdi,4,400,78
+2026-06-05,Buttermilk,1,40,30
+2026-06-05,Jeera Rice,3,390,105
+2026-06-05,Papad Fry,4,180,36
+2026-06-06,Paneer Butter Masala,20,6400,95
+2026-06-06,Chicken Biryani,19,7220,120
+2026-06-06,Mutton Rogan Josh,33,13860,150
+2026-06-06,Tandoori Chicken,20,7200,120
+2026-06-06,Paneer Tikka Masala,25,8500,110
+2026-06-06,Veg Fried Rice,16,3200,140
+2026-06-06,Masala Papad,19,950,38
+2026-06-06,Plain Lassi,34,2720,58
+2026-06-06,Steam Rice,25,2250,68
+2026-06-06,Gulab Jamun,30,2400,60
+2026-06-06,Truffle Pasta,2,1100,140
+2026-06-06,Grilled Salmon,7,5250,220
+2026-06-06,Cheese Burst Pizza,2,960,130
+2026-06-06,Belgian Waffle,3,960,80
+2026-06-06,Mango Cheesecake,5,1400,65
+2026-06-06,Veg Sandwich,4,480,95
+2026-06-06,Plain Khichdi,2,200,78
+2026-06-06,Buttermilk,4,160,30
+2026-06-06,Jeera Rice,4,520,105
+2026-06-06,Papad Fry,4,180,36
+2026-06-07,Paneer Butter Masala,26,8320,95
+2026-06-07,Chicken Biryani,20,7600,120
+2026-06-07,Mutton Rogan Josh,21,8820,150
+2026-06-07,Tandoori Chicken,17,6120,120
+2026-06-07,Paneer Tikka Masala,36,12240,110
+2026-06-28,GRAND TOTAL,0,0,0
+2026-06-07,Veg Fried Rice,30,6000,140
+2026-06-07,Masala Papad,16,800,38
+2026-06-07,Plain Lassi,17,1360,58
+2026-06-07,Steam Rice,16,1440,68
+2026-06-07,Gulab Jamun,29,2320,60
+2026-06-07,Truffle Pasta,4,2200,140
+2026-06-07,Grilled Salmon,6,4500,220
+2026-06-07,Cheese Burst Pizza,5,2400,130
+2026-06-07,Belgian Waffle,2,640,80
+2026-06-07,Mango Cheesecake,6,1680,65
+2026-06-07,Veg Sandwich,3,360,95
+2026-06-07,Plain Khichdi,2,200,78
+2026-06-07,Buttermilk,3,120,30
+2026-06-07,Jeera Rice,4,520,105
+2026-06-07,Papad Fry,3,135,36
+2026-06-08,Paneer Butter Masala,14,4480,95
+2026-06-08,Chicken Biryani,16,6080,120
+2026-06-08,Mutton Rogan Josh,21,8820,150
+2026-06-08,Tandoori Chicken,21,7560,120
+2026-06-08,Paneer Tikka Masala,19,6460,110
+2026-06-08,Veg Fried Rice,16,3200,140
+2026-06-08,Masala Papad,21,1050,38
+2026-06-08,Plain Lassi,22,1760,58
+2026-06-08,Steam Rice,25,2250,68
+2026-06-08,Gulab Jamun,13,1040,60
+2026-06-08,Truffle Pasta,6,3300,140
+2026-06-08,Grilled Salmon,2,1500,220
+2026-06-08,Cheese Burst Pizza,3,1440,130
+2026-06-08,Belgian Waffle,2,640,80
+2026-06-08,Mango Cheesecake,3,840,65
+2026-06-08,Veg Sandwich,2,240,95
+2026-06-08,Plain Khichdi,2,200,78
+2026-06-08,Buttermilk,3,120,30
+2026-06-08,Jeera Rice,3,390,105
+2026-06-08,Papad Fry,1,45,36
+2026-06-09,Paneer Butter Masala,31,9920,95
+2026-06-09,Chicken Biryani,14,5320,120
+2026-06-09,Mutton Rogan Josh,20,8400,150
+2026-06-09,Tandoori Chicken,21,7560,120
+2026-06-09,Paneer Tikka Masala,29,9860,110
+2026-06-09,Veg Fried Rice,18,3600,140
+2026-06-09,Masala Papad,11,550,38
+2026-06-09,Plain Lassi,26,2080,58
+2026-06-09,Steam Rice,17,1530,68
+2026-06-09,Gulab Jamun,17,1360,60
+2026-06-09,Truffle Pasta,3,1650,140
+2026-06-09,Grilled Salmon,2,1500,220
+2026-06-09,Cheese Burst Pizza,2,960,130
+2026-06-09,Belgian Waffle,3,960,80
+2026-06-09,Mango Cheesecake,2,560,65
+2026-06-09,Veg Sandwich,5,600,95
+2026-06-09,Plain Khichdi,2,200,78
+2026-06-09,Buttermilk,2,80,30
+2026-06-09,Jeera Rice,2,260,105
+2026-06-09,Papad Fry,1,45,36
+2026-06-10,Paneer Butter Masala,27,8640,95
+2026-06-10,Chicken Biryani,31,11780,120
+2026-06-10,Mutton Rogan Josh,20,8400,150
+2026-06-10,Tandoori Chicken,17,6120,120
+2026-06-10,Paneer Tikka Masala,18,6120,110
+2026-06-10,Veg Fried Rice,14,2800,140
+2026-06-10,Masala Papad,18,900,38
+2026-06-10,Plain Lassi,27,2160,58
+2026-06-10,Steam Rice,14,1260,68
+2026-06-10,Gulab Jamun,20,1600,60
+2026-06-10,Truffle Pasta,4,2200,140
+2026-06-10,Grilled Salmon,2,1500,220
+2026-06-10,Cheese Burst Pizza,4,1920,130
+2026-06-10,Belgian Waffle,6,1920,80
+2026-06-10,Mango Cheesecake,6,1680,65
+2026-06-10,Veg Sandwich,1,120,95
+2026-06-10,Plain Khichdi,3,300,78
+2026-06-10,Buttermilk,3,120,30
+2026-06-10,Jeera Rice,4,520,105
+2026-06-10,Papad Fry,3,135,36
+2026-06-11,Paneer Butter Masala,17,5440,95
+2026-06-11,Chicken Biryani,19,7220,120
+2026-06-11,Mutton Rogan Josh,24,10080,150
+2026-06-11,Tandoori Chicken,20,7200,120
+2026-06-11,Paneer Tikka Masala,19,6460,110
+2026-06-11,Veg Fried Rice,18,3600,140
+2026-06-11,Masala Papad,24,1200,38
+2026-06-11,Plain Lassi,26,2080,58
+2026-06-11,Steam Rice,19,1710,68
+2026-06-11,Gulab Jamun,17,1360,60
+2026-06-11,Truffle Pasta,4,2200,140
+2026-06-11,Grilled Salmon,3,2250,220
+2026-06-11,Cheese Burst Pizza,5,2400,130
+2026-06-11,Belgian Waffle,3,960,80
+2026-06-11,Mango Cheesecake,4,1120,65
+2026-06-11,Veg Sandwich,1,120,95
+2026-06-11,Plain Khichdi,2,200,78
+2026-06-11,Buttermilk,3,120,30
+2026-06-11,Jeera Rice,4,520,105
+2026-06-11,Papad Fry,4,180,36
+2026-06-12,Paneer Butter Masala,21,6720,95
+2026-06-12,Chicken Biryani,24,9120,120
+2026-06-12,Mutton Rogan Josh,22,9240,150
+2026-06-12,Tandoori Chicken,23,8280,120
+2026-06-12,Paneer Tikka Masala,24,8160,110
+2026-06-12,Veg Fried Rice,12,2400,140
+2026-06-12,Masala Papad,17,850,38
+2026-06-12,Plain Lassi,23,1840,58
+2026-06-12,Steam Rice,13,1170,68
+2026-06-12,Gulab Jamun,22,1760,60
+2026-06-12,Truffle Pasta,5,2750,140
+2026-06-12,Grilled Salmon,3,2250,220
+2026-06-12,Cheese Burst Pizza,2,960,130
+2026-06-12,Belgian Waffle,2,640,80
+2026-06-12,Mango Cheesecake,3,840,65
+2026-06-12,Veg Sandwich,3,360,95
+2026-06-12,Plain Khichdi,2,200,78
+2026-06-12,Buttermilk,1,40,30
+2026-06-12,Jeera Rice,4,520,105
+2026-06-12,Papad Fry,3,135,36
+2026-06-13,Paneer Butter Masala,36,11520,95
+2026-06-13,Chicken Biryani,37,14060,120
+2026-06-13,Mutton Rogan Josh,39,16380,150
+2026-06-13,Tandoori Chicken,35,12600,120
+2026-06-13,Paneer Tikka Masala,29,9860,110
+2026-06-13,Veg Fried Rice,21,4200,140
+2026-06-13,Masala Papad,24,1200,38
+2026-06-13,Plain Lassi,17,1360,58
+2026-06-13,Steam Rice,17,1530,68
+2026-06-13,Gulab Jamun,17,1360,60
+2026-06-13,Truffle Pasta,4,2200,140
+2026-06-13,Grilled Salmon,2,1500,220
+2026-06-13,Cheese Burst Pizza,3,1440,130
+2026-06-13,Belgian Waffle,3,960,80
+2026-06-13,Mango Cheesecake,2,560,65
+2026-06-13,Veg Sandwich,3,360,95
+2026-06-13,Plain Khichdi,3,300,78
+2026-06-13,Buttermilk,4,160,30
+2026-06-13,Jeera Rice,1,130,105
+2026-06-13,Papad Fry,4,180,36
+2026-06-14,Paneer Butter Masala,29,9280,95
+2026-06-14,Chicken Biryani,36,13680,120
+2026-06-14,Mutton Rogan Josh,34,14280,150
+2026-06-14,Tandoori Chicken,26,9360,120
+2026-06-14,Paneer Tikka Masala,27,9180,110
+2026-06-14,Veg Fried Rice,14,2800,140
+2026-06-14,Masala Papad,28,1400,38
+2026-06-14,Plain Lassi,23,1840,58
+2026-06-14,Steam Rice,30,2700,68
+2026-06-14,Gulab Jamun,19,1520,60
+2026-06-14,Truffle Pasta,5,2750,140
+2026-06-14,Grilled Salmon,5,3750,220
+2026-06-14,Cheese Burst Pizza,2,960,130
+2026-06-14,Belgian Waffle,4,1280,80
+2026-06-14,Mango Cheesecake,5,1400,65
+2026-06-14,Veg Sandwich,3,360,95
+2026-06-14,Plain Khichdi,2,200,78
+2026-06-14,Buttermilk,3,120,30
+2026-06-14,Jeera Rice,4,520,105
+2026-06-14,Papad Fry,4,180,36
+2026-06-15,Paneer Butter Masala,17,5440,95
+2026-06-15,Chicken Biryani,18,6840,120
+2026-06-15,Mutton Rogan Josh,24,10080,150
+2026-06-15,Tandoori Chicken,18,6480,120
+2026-06-15,Paneer Tikka Masala,17,5780,110
+2026-06-15,Veg Fried Rice,14,2800,140
+2026-06-15,Masala Papad,12,600,38
+2026-06-15,Plain Lassi,13,1040,58
+2026-06-15,Steam Rice,19,1710,68
+2026-06-15,Gulab Jamun,15,1200,60
+2026-06-15,Truffle Pasta,4,2200,140
+2026-06-15,Grilled Salmon,3,2250,220
+2026-06-15,Cheese Burst Pizza,2,960,130
+2026-06-15,Belgian Waffle,3,960,80
+2026-06-15,Mango Cheesecake,2,560,65
+2026-06-15,Veg Sandwich,3,360,95
+2026-06-15,Plain Khichdi,4,400,78
+2026-06-15,Buttermilk,2,80,30
+2026-06-15,Jeera Rice,2,260,105
+2026-06-15,Papad Fry,3,135,36
+2026-06-16,Paneer Butter Masala,20,6400,95
+2026-06-16,Chicken Biryani,15,5700,120
+2026-06-16,Mutton Rogan Josh,29,12180,150
+2026-06-16,Tandoori Chicken,17,6120,120
+2026-06-16,Paneer Tikka Masala,21,7140,110
+2026-06-16,Veg Fried Rice,20,4000,140
+2026-06-16,Masala Papad,13,650,38
+2026-06-16,Plain Lassi,18,1440,58
+2026-06-16,Steam Rice,25,2250,68
+2026-06-16,Gulab Jamun,14,1120,60
+2026-06-16,Truffle Pasta,7,3850,140
+2026-06-16,Grilled Salmon,4,3000,220
+2026-06-16,Cheese Burst Pizza,6,2880,130
+2026-06-16,Belgian Waffle,5,1600,80
+2026-06-16,Mango Cheesecake,6,1680,65
+2026-06-16,Veg Sandwich,2,240,95
+2026-06-16,Plain Khichdi,1,100,78
+2026-06-16,Buttermilk,4,160,30
+2026-06-16,Jeera Rice,4,520,105
+2026-06-16,Papad Fry,4,180,36
+2026-06-17,Paneer Butter Masala,33,10560,95
+2026-06-17,Chicken Biryani,20,7600,120
+2026-06-17,Mutton Rogan Josh,28,11760,150
+2026-06-17,Tandoori Chicken,23,8280,120
+2026-06-17,Paneer Tikka Masala,23,7820,110
+2026-06-17,Veg Fried Rice,23,4600,140
+2026-06-17,Masala Papad,12,600,38
+2026-06-17,Plain Lassi,18,1440,58
+2026-06-17,Steam Rice,22,1980,68
+2026-06-17,Gulab Jamun,20,1600,60
+2026-06-17,Truffle Pasta,5,2750,140
+2026-06-17,Grilled Salmon,2,1500,220
+2026-06-17,Cheese Burst Pizza,3,1440,130
+2026-06-17,Belgian Waffle,3,960,80
+2026-06-17,Mango Cheesecake,6,1680,65
+2026-06-17,Veg Sandwich,3,360,95
+2026-06-17,Plain Khichdi,3,300,78
+2026-06-23,,7,0,20
+2026-06-17,Buttermilk,4,160,30
+2026-06-17,Jeera Rice,3,390,105
+2026-06-17,Papad Fry,2,90,36
+2026-06-18,Paneer Butter Masala,18,5760,95
+2026-06-18,Chicken Biryani,28,10640,120
+2026-06-18,Mutton Rogan Josh,27,11340,150
+2026-06-18,Tandoori Chicken,20,7200,120
+2026-06-18,Paneer Tikka Masala,23,7820,110
+2026-06-18,Veg Fried Rice,13,2600,140
+2026-06-18,Masala Papad,13,650,38
+2026-06-18,Plain Lassi,12,960,58
+2026-06-18,Steam Rice,26,2340,68
+2026-06-18,Gulab Jamun,24,1920,60
+2026-06-18,Truffle Pasta,4,2200,140
+2026-06-18,Grilled Salmon,2,1500,220
+2026-06-18,Cheese Burst Pizza,5,2400,130
+2026-06-18,Belgian Waffle,4,1280,80
+2026-06-18,Mango Cheesecake,2,560,65
+2026-06-18,Veg Sandwich,4,480,95
+2026-06-18,Plain Khichdi,1,100,78
+2026-06-18,Buttermilk,1,40,30
+2026-06-18,Jeera Rice,1,130,105
+2026-06-18,Papad Fry,3,135,36
+2026-06-19,Paneer Butter Masala,19,6080,95
+2026-06-19,Chicken Biryani,29,11020,120
+2026-06-19,Mutton Rogan Josh,24,10080,150
+2026-06-19,Tandoori Chicken,27,9720,120
+2026-06-19,Paneer Tikka Masala,27,9180,110
+2026-06-19,Veg Fried Rice,24,4800,140
+2026-06-19,Masala Papad,16,800,38
+2026-06-19,Plain Lassi,12,960,58
+2026-06-19,Steam Rice,20,1800,68
+2026-06-19,Gulab Jamun,22,1760,60
+2026-06-19,Truffle Pasta,3,1650,140
+2026-06-19,Grilled Salmon,2,1500,220
+2026-06-19,Cheese Burst Pizza,3,1440,130
+2026-06-19,Belgian Waffle,3,960,80
+2026-06-19,Mango Cheesecake,5,1400,65
+2026-06-19,Veg Sandwich,4,480,95
+2026-06-19,Plain Khichdi,2,200,78
+2026-06-19,Buttermilk,3,120,30
+2026-06-19,Jeera Rice,3,390,105
+2026-06-19,Papad Fry,2,90,36
+2026-06-20,Paneer Butter Masala,25,8000,95
+2026-06-20,Chicken Biryani,28,10640,120
+2026-06-20,Mutton Rogan Josh,30,12600,150
+2026-06-20,Tandoori Chicken,18,6480,120
+2026-06-20,Paneer Tikka Masala,30,10200,110
+2026-06-20,Veg Fried Rice,31,6200,140
+2026-06-20,Masala Papad,19,950,38
+2026-06-20,Plain Lassi,24,1920,58
+2026-06-20,Steam Rice,27,2430,68
+2026-06-20,Gulab Jamun,19,1520,60
+2026-06-20,Truffle Pasta,5,2750,140
+2026-06-20,Grilled Salmon,5,3750,220
+2026-06-20,Cheese Burst Pizza,5,2400,130
+2026-06-20,Belgian Waffle,6,1920,80
+2026-06-20,Mango Cheesecake,2,560,65
+2026-06-20,Veg Sandwich,1,120,95
+2026-06-20,Plain Khichdi,3,300,78
+2026-06-20,Buttermilk,2,80,30
+2026-06-20,Jeera Rice,4,520,105
+2026-06-20,Papad Fry,2,90,36
+2026-06-21,Paneer Butter Masala,35,11200,95
+2026-06-21,Chicken Biryani,41,15580,120
+2026-06-21,Mutton Rogan Josh,34,14280,150
+2026-06-21,Tandoori Chicken,28,10080,120
+2026-06-21,Paneer Tikka Masala,24,8160,110
+2026-06-21,Veg Fried Rice,20,4000,140
+2026-06-21,Masala Papad,21,1050,38
+2026-06-21,Plain Lassi,24,1920,58
+2026-06-21,Steam Rice,21,1890,68
+2026-06-21,Gulab Jamun,15,1200,60
+2026-06-21,Truffle Pasta,4,2200,140
+2026-06-21,Grilled Salmon,6,4500,220
+2026-06-21,Cheese Burst Pizza,2,960,130
+2026-06-21,Belgian Waffle,6,1920,80
+2026-06-21,Mango Cheesecake,2,560,65
+2026-06-21,Veg Sandwich,3,360,95
+2026-06-21,Plain Khichdi,4,400,78
+2026-06-21,Buttermilk,1,40,30
+2026-06-21,Jeera Rice,2,260,105
+2026-06-21,Papad Fry,4,180,36
+2026-06-22,Paneer Butter Masala,27,8640,95
+2026-06-22,Chicken Biryani,23,8740,120
+2026-06-22,Mutton Rogan Josh,24,10080,150
+2026-06-22,Tandoori Chicken,25,9000,120
+2026-06-22,Paneer Tikka Masala,18,6120,110
+2026-06-22,Veg Fried Rice,14,2800,140
+2026-06-22,Masala Papad,14,700,38
+2026-06-22,Plain Lassi,22,1760,58
+2026-06-22,Steam Rice,21,1890,68
+2026-06-22,Gulab Jamun,25,2000,60
+2026-06-22,Truffle Pasta,5,2750,140
+2026-06-22,Grilled Salmon,5,3750,220
+2026-06-22,Cheese Burst Pizza,3,1440,130
+2026-06-22,Belgian Waffle,6,1920,80
+2026-06-22,Mango Cheesecake,3,840,65
+2026-06-22,Veg Sandwich,3,360,95
+2026-06-22,Plain Khichdi,4,400,78
+2026-06-22,Buttermilk,3,120,30
+2026-06-22,Jeera Rice,3,390,105
+2026-06-22,Papad Fry,4,180,36
+2026-06-23,Paneer Butter Masala,29,9280,95
+2026-06-23,Chicken Biryani,25,9500,120
+2026-06-23,Mutton Rogan Josh,27,11340,150
+2026-06-23,Tandoori Chicken,28,10080,120
+2026-06-23,Paneer Tikka Masala,22,7480,110
+2026-06-23,Veg Fried Rice,17,3400,140
+2026-06-23,Masala Papad,16,800,38
+2026-06-23,Plain Lassi,23,1840,58
+2026-06-23,Steam Rice,23,2070,68
+2026-06-23,Gulab Jamun,24,1920,60
+2026-06-23,Truffle Pasta,3,1650,140
+2026-06-23,Grilled Salmon,2,1500,220
+2026-06-23,Cheese Burst Pizza,6,2880,130
+2026-06-23,Belgian Waffle,2,640,80
+2026-06-23,Mango Cheesecake,4,1120,65
+2026-06-23,Veg Sandwich,3,360,95
+2026-06-23,Plain Khichdi,2,200,78
+2026-06-23,Buttermilk,2,80,30
+2026-06-23,Jeera Rice,3,390,105
+2026-06-23,Papad Fry,4,180,36
+2026-06-24,Paneer Butter Masala,28,8960,95
+2026-06-24,Chicken Biryani,31,11780,120
+2026-06-24,Mutton Rogan Josh,33,13860,150
+2026-06-24,Tandoori Chicken,17,6120,120
+2026-06-24,Paneer Tikka Masala,23,7820,110
+2026-06-24,Veg Fried Rice,18,3600,140
+2026-06-24,Masala Papad,20,1000,38
+2026-06-24,Plain Lassi,14,1120,58
+2026-06-24,Steam Rice,26,2340,68
+2026-06-24,Gulab Jamun,17,1360,60
+2026-06-24,Truffle Pasta,4,2200,140
+2026-06-24,Grilled Salmon,2,1500,220
+2026-06-24,Cheese Burst Pizza,2,960,130
+2026-06-24,Belgian Waffle,4,1280,80
+2026-06-24,Mango Cheesecake,3,840,65
+2026-06-24,Veg Sandwich,2,240,95
+2026-06-24,Plain Khichdi,1,100,78
+2026-06-24,Buttermilk,4,160,30
+2026-06-24,Jeera Rice,2,260,105
+2026-06-24,Papad Fry,2,90,36
+2026-06-25,Paneer Butter Masala,23,7360,95
+2026-06-25,Chicken Biryani,17,6460,120
+2026-06-25,Mutton Rogan Josh,32,13440,150
+2026-06-25,Tandoori Chicken,17,6120,120
+2026-06-25,Paneer Tikka Masala,30,10200,110
+2026-06-25,Veg Fried Rice,17,3400,140
+2026-06-25,Masala Papad,19,950,38
+2026-06-25,Plain Lassi,21,1680,58
+2026-06-25,Steam Rice,17,1530,68
+2026-06-25,Gulab Jamun,25,2000,60
+2026-06-25,Truffle Pasta,3,1650,140
+2026-06-25,Grilled Salmon,4,3000,220
+2026-06-25,Cheese Burst Pizza,3,1440,130
+2026-06-25,Belgian Waffle,5,1600,80
+2026-06-25,Mango Cheesecake,7,1960,65
+2026-06-25,Veg Sandwich,1,120,95
+2026-06-25,Plain Khichdi,4,400,78
+2026-06-25,Buttermilk,3,120,30
+2026-06-25,Jeera Rice,2,260,105
+2026-06-25,Papad Fry,3,135,36
+2026-06-26,Paneer Butter Masala,22,7040,95
+2026-06-26,Chicken Biryani,20,7600,120
+2026-06-26,Mutton Rogan Josh,15,6300,150
+2026-06-26,Tandoori Chicken,25,9000,120
+2026-06-26,Paneer Tikka Masala,28,9520,110
+2026-06-26,Veg Fried Rice,15,3000,140
+2026-06-26,Masala Papad,18,900,38
+2026-06-26,Plain Lassi,13,1040,58
+2026-06-26,Steam Rice,24,2160,68
+2026-06-26,Gulab Jamun,17,1360,60
+2026-06-26,Truffle Pasta,4,2200,140
+2026-06-26,Grilled Salmon,4,3000,220
+2026-06-26,Cheese Burst Pizza,6,2880,130
+2026-06-26,Belgian Waffle,4,1280,80
+2026-06-26,Mango Cheesecake,4,1120,65
+2026-06-26,Veg Sandwich,5,600,95
+2026-06-26,Plain Khichdi,2,200,78
+2026-06-26,Buttermilk,2,80,30
+2026-06-26,Jeera Rice,5,650,105
+2026-06-26,Papad Fry,3,135,36
+2026-06-27,Paneer Butter Masala,28,8960,95
+2026-06-27,Chicken Biryani,21,7980,120
+2026-06-27,Mutton Rogan Josh,28,11760,150
+2026-06-27,Tandoori Chicken,28,10080,120
+2026-06-27,Paneer Tikka Masala,26,8840,110
+2026-06-27,Veg Fried Rice,28,5600,140
+2026-06-27,Masala Papad,23,1150,38
+2026-06-27,Plain Lassi,23,1840,58
+2026-06-27,Steam Rice,16,1440,68
+2026-06-27,Gulab Jamun,26,2080,60
+2026-06-27,Truffle Pasta,4,2200,140
+2026-06-27,Grilled Salmon,2,1500,220
+2026-06-27,Cheese Burst Pizza,2,960,130
+2026-06-27,Belgian Waffle,4,1280,80
+2026-06-27,Mango Cheesecake,3,840,65
+2026-06-27,Veg Sandwich,2,240,95
+2026-06-27,Plain Khichdi,3,300,78
+2026-06-27,Buttermilk,4,160,30
+2026-06-27,Jeera Rice,2,260,105
+2026-06-27,Papad Fry,1,45,36
+2026-06-28,Paneer Butter Masala,38,12160,95
+2026-06-28,Chicken Biryani,24,9120,120
+2026-06-28,Mutton Rogan Josh,29,12180,150
+2026-06-28,Tandoori Chicken,40,14400,120
+2026-06-28,Paneer Tikka Masala,27,9180,110
+2026-06-28,Veg Fried Rice,25,5000,140
+2026-06-28,Masala Papad,25,1250,38
+2026-06-28,Plain Lassi,20,1600,58
+2026-06-28,Steam Rice,18,1620,68
+2026-06-28,Gulab Jamun,30,2400,60
+2026-06-28,Truffle Pasta,3,1650,140
+2026-06-28,Grilled Salmon,7,5250,220
+2026-06-28,Cheese Burst Pizza,2,960,130
+2026-06-28,Belgian Waffle,3,960,80
+2026-06-28,Mango Cheesecake,5,1400,65
+2026-06-28,Veg Sandwich,2,240,95
+2026-06-28,Plain Khichdi,2,200,78
+2026-06-28,Buttermilk,2,80,30
+2026-06-28,Jeera Rice,1,130,105
+2026-06-28,Papad Fry,2,90,36
+2026-06-29,Paneer Butter Masala,25,8000,95
+2026-06-29,Chicken Biryani,19,7220,120
+2026-06-29,Mutton Rogan Josh,13,5460,150
+2026-06-29,Tandoori Chicken,28,10080,120
+2026-06-29,Paneer Tikka Masala,23,7820,110
+2026-06-29,Veg Fried Rice,11,2200,140
+2026-06-29,Masala Papad,11,550,38
+2026-06-29,Plain Lassi,18,1440,58
+2026-06-29,Steam Rice,20,1800,68
+2026-06-29,Gulab Jamun,21,1680,60
+2026-06-29,Truffle Pasta,6,3300,140
+2026-06-29,Grilled Salmon,5,3750,220
+2026-06-29,Cheese Burst Pizza,5,2400,130
+2026-06-29,Belgian Waffle,6,1920,80
+2026-06-29,Mango Cheesecake,2,560,65
+2026-06-17,Subtotal,0,18450,0
+2026-06-10,Total,0,0,0
+2026-06-29,Veg Sandwich,4,480,95
+2026-06-29,Plain Khichdi,4,400,78
+2026-06-29,Buttermilk,4,160,30
+2026-06-29,Jeera Rice,3,390,105
+2026-06-29,Papad Fry,1,45,36
+2026-06-30,Paneer Butter Masala,17,5440,95
+2026-06-30,Chicken Biryani,24,9120,120
+2026-06-30,Mutton Rogan Josh,24,10080,150
+2026-06-30,Tandoori Chicken,24,8640,120
+2026-06-30,Paneer Tikka Masala,25,8500,110
+2026-06-30,Veg Fried Rice,20,4000,140
+2026-06-30,Masala Papad,23,1150,38
+2026-06-30,Plain Lassi,24,1920,58
+2026-06-30,Steam Rice,23,2070,68
+2026-06-30,Gulab Jamun,21,1680,60
+2026-06-30,Truffle Pasta,5,2750,140
+2026-06-30,Grilled Salmon,5,3750,220
+2026-06-30,Cheese Burst Pizza,2,960,130
+2026-06-30,Belgian Waffle,4,1280,80
+2026-06-30,Mango Cheesecake,5,1400,65
+2026-06-30,Veg Sandwich,3,360,95
+2026-06-30,Plain Khichdi,1,100,78
+2026-06-30,Buttermilk,1,40,30
+2026-06-30,Jeera Rice,3,390,105
+2026-06-30,Papad Fry,1,45,36
