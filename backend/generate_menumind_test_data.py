@@ -217,9 +217,13 @@ def classify_from_csv(path: Path) -> tuple[list[dict], float, float]:
             }
         )
 
-    n = len(items)
-    avg_popularity = sum(i["total_quantity"] for i in items) / n
-    avg_profitability = sum(i["profit"] for i in items) / n
+    # Mirror analytics_service: median thresholds over adequately-sampled items.
+    from statistics import median
+
+    MIN_CLASSIFY_QUANTITY = 3
+    sample = [i for i in items if i["total_quantity"] >= MIN_CLASSIFY_QUANTITY] or items
+    avg_popularity = median(i["total_quantity"] for i in sample)
+    avg_profitability = median(i["profit"] for i in sample)
 
     for item in items:
         high_pop = item["total_quantity"] >= avg_popularity

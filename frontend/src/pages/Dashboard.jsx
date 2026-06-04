@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertCircle, ArrowDownUp, CalendarDays, DollarSign, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { AlertCircle, ArrowDownUp, CalendarDays, Download, DollarSign, FilterX, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
 
 import api from '../services/api';
 import { MenuMatrix } from '../components/MenuMatrix';
@@ -26,6 +26,9 @@ export default function Dashboard() {
     const [dailySort, setDailySort] = useState('date-desc');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // Draft inputs vs. the applied range that actually drives fetching.
+    const [rangeDraft, setRangeDraft] = useState({ start: '', end: '' });
+    const [appliedRange, setAppliedRange] = useState({ start: '', end: '' });
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -39,7 +42,10 @@ export default function Dashboard() {
 
             setLoading(true);
             try {
-                const query = `restaurant_name=${encodeURIComponent(activeRestaurant)}`;
+                const params = new URLSearchParams({ restaurant_name: activeRestaurant });
+                if (appliedRange.start) params.set('start_date', appliedRange.start);
+                if (appliedRange.end) params.set('end_date', appliedRange.end);
+                const query = params.toString();
                 const [classificationResponse, insightsResponse, dailyResponse] = await Promise.all([
                     api.get(`/analytics/classification?${query}`),
                     api.get(`/analytics/insights?${query}`),
@@ -56,7 +62,28 @@ export default function Dashboard() {
             }
         };
         fetchAnalytics();
-    }, [activeRestaurant]);
+    }, [activeRestaurant, appliedRange]);
+
+    const hasRange = Boolean(appliedRange.start || appliedRange.end);
+    const applyRange = () => setAppliedRange({ ...rangeDraft });
+    const clearRange = () => { setRangeDraft({ start: '', end: '' }); setAppliedRange({ start: '', end: '' }); };
+
+    const exportDailyCsv = () => {
+        const header = ['Date', 'Units', 'Revenue', 'Estimated Profit'];
+        const rows = sortedDaily.map((d) => [
+            text(d?.date), toNumber(d?.total_quantity), toNumber(d?.total_revenue).toFixed(2), toNumber(d?.total_profit).toFixed(2),
+        ]);
+        rows.push(['TOTAL', dailyTotals.quantity, dailyTotals.revenue.toFixed(2), dailyTotals.profit.toFixed(2)]);
+        const csv = [header, ...rows].map((r) => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const suffix = hasRange ? `_${appliedRange.start || 'start'}_to_${appliedRange.end || 'end'}` : '';
+        link.href = url;
+        link.download = `${activeRestaurant}_daily_sales${suffix}.csv`.replace(/\s+/g, '_');
+        link.click();
+        URL.revokeObjectURL(url);
+    };
 
     const topPerformer = useMemo(() => {
         if (!classifications.length) return null;
@@ -140,6 +167,39 @@ export default function Dashboard() {
                 <EmptyState title="No restaurant selected" message="Upload a sales file to create your first restaurant workspace." />
             ) : (
                 <>
+                    <Card className="p-4 border-slate-200">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">From</label>
+                                    <input type="date" value={rangeDraft.start} max={rangeDraft.end || undefined}
+                                        onChange={(e) => setRangeDraft((r) => ({ ...r, start: e.target.value }))}
+                                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">To</label>
+                                    <input type="date" value={rangeDraft.end} min={rangeDraft.start || undefined}
+                                        onChange={(e) => setRangeDraft((r) => ({ ...r, end: e.target.value }))}
+                                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300" />
+                                </div>
+                                <button onClick={applyRange} disabled={!rangeDraft.start && !rangeDraft.end}
+                                    className="rounded-md bg-ink-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-ink-800 disabled:opacity-40">
+                                    Apply range
+                                </button>
+                                {hasRange && (
+                                    <button onClick={clearRange} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-800">
+                                        <FilterX className="w-4 h-4" /> Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className="text-xs font-semibold text-slate-400">
+                                {hasRange
+                                    ? `Showing ${appliedRange.start || '…'} → ${appliedRange.end || '…'}`
+                                    : 'Showing all uploaded data'}
+                            </div>
+                        </div>
+                    </Card>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                         <MetricCard icon={DollarSign} label="Total Revenue" loading={loading} value={money(totalRevenue)} />
                         <MetricCard icon={TrendingUp} label="Estimated Gross Profit" loading={loading} value={money(totalProfit)} />
@@ -208,19 +268,24 @@ export default function Dashboard() {
                                     <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Daily Sales Breakdown</h3>
                                     <span className="text-xs font-semibold text-slate-400">({daily.length} day{daily.length === 1 ? '' : 's'})</span>
                                 </div>
-                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                                    <ArrowDownUp className="w-3.5 h-3.5" />
-                                    <span className="uppercase tracking-widest">Sort</span>
-                                    <select
-                                        value={dailySort}
-                                        onChange={(e) => setDailySort(e.target.value)}
-                                        className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
-                                    >
-                                        {Object.entries(DAILY_SORTS).map(([key, { label }]) => (
-                                            <option key={key} value={key}>{label}</option>
-                                        ))}
-                                    </select>
-                                </label>
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                        <ArrowDownUp className="w-3.5 h-3.5" />
+                                        <span className="uppercase tracking-widest">Sort</span>
+                                        <select
+                                            value={dailySort}
+                                            onChange={(e) => setDailySort(e.target.value)}
+                                            className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
+                                        >
+                                            {Object.entries(DAILY_SORTS).map(([key, { label }]) => (
+                                                <option key={key} value={key}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <button onClick={exportDailyCsv} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50">
+                                        <Download className="w-3.5 h-3.5" /> Export CSV
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">

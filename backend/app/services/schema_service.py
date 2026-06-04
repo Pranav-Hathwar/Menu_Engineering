@@ -41,5 +41,57 @@ def ensure_runtime_schema(engine, session_factory):
                 {"owner_id": first_user.id},
             )
             db.commit()
+
+        _backfill_upload_batches(db, inspect(engine))
     finally:
         db.close()
+
+
+def _backfill_upload_batches(db: Session, inspector) -> None:
+    """Create UploadBatch rows for sales uploaded before the table existed.
+
+    Legacy batches have no original bytes, so their content_hash is a synthetic
+    'legacy:<batch_id>' sentinel that can never collide with a real sha256.
+    """
+    if "upload_batches" not in inspector.get_table_names():
+        return
+
+    legacy = db.execute(
+        text(
+            """
+            SELECT s.upload_batch_id AS batch_id,
+                   MIN(s.owner_id)        AS owner_id,
+                   MIN(s.restaurant_name) AS restaurant_name,
+                   COUNT(*)               AS row_count,
+                   COALESCE(SUM(s.revenue), 0) AS total_revenue
+            FROM sales_data s
+            WHERE s.upload_batch_id IS NOT NULL
+              AND s.upload_batch_id NOT IN (SELECT batch_id FROM upload_batches)
+            GROUP BY s.upload_batch_id
+            """
+        )
+    ).fetchall()
+
+    for row in legacy:
+        db.execute(
+            text(
+                """
+                INSERT INTO upload_batches
+                    (batch_id, owner_id, restaurant_name, filename, content_hash, row_count, total_revenue)
+                VALUES
+                    (:batch_id, :owner_id, :restaurant_name, :filename, :content_hash, :row_count, :total_revenue)
+                """
+            ),
+            {
+                "batch_id": row.batch_id,
+                "owner_id": row.owner_id,
+                "restaurant_name": row.restaurant_name,
+                "filename": "(imported before batch tracking)",
+                "content_hash": f"legacy:{row.batch_id}",
+                "row_count": row.row_count,
+                "total_revenue": round(float(row.total_revenue or 0.0), 2),
+            },
+        )
+    if legacy:
+        db.commit()
+        logger.info("Backfilled %s legacy upload batch record(s)", len(legacy))

@@ -25,7 +25,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://menumind_user:menumind_pass@db:5432/menumind
-      SECRET_KEY: replace-this-with-a-real-secret-before-deploy
+      # Must be supplied from the host environment; compose refuses to start
+      # without it. Generate one: python -c "import secrets; print(secrets.token_urlsafe(48))"
+      SECRET_KEY: ${SECRET_KEY:?Set a strong SECRET_KEY in your shell before deploying}
       DEBUG: "false"
       AUTO_CREATE_TABLES: "true"
       MAX_UPLOAD_BYTES: "10485760"

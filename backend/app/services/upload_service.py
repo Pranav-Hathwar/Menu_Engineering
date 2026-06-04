@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+import hashlib
 import io
 import json
 import logging
@@ -16,6 +17,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.sales import SalesData
+from app.models.upload_batch import UploadBatch
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,35 @@ def process_upload(
     db: Session,
     restaurant_name: str,
     owner_id: int | None = None,
+    allow_duplicate: bool = False,
 ):
+    restaurant_name = restaurant_name.strip()
+    content_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    # Duplicate guard: an identical file re-uploaded to the same restaurant
+    # would silently double-count revenue. Reject unless explicitly overridden.
+    if not allow_duplicate:
+        existing = (
+            db.query(UploadBatch)
+            .filter(
+                UploadBatch.owner_id == owner_id,
+                UploadBatch.restaurant_name == restaurant_name,
+                UploadBatch.content_hash == content_hash,
+            )
+            .order_by(UploadBatch.created_at.desc())
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"This exact file was already uploaded to '{restaurant_name}' "
+                    f"(batch {existing.batch_id[:8]}, {existing.row_count} rows). "
+                    "Re-uploading would double-count revenue. "
+                    "Use 'Upload anyway' to override."
+                ),
+            )
+
     dataframe = _read_dataframe(file_bytes, filename)
     dataframe = _discover_headers(dataframe)
     dataframe = _normalize_columns(dataframe)
@@ -52,18 +82,30 @@ def process_upload(
     sales_objects = [
         SalesData(
             **record,
-            restaurant_name=restaurant_name.strip(),
+            restaurant_name=restaurant_name,
             owner_id=owner_id,
             upload_batch_id=batch_id,
         )
         for record in records
     ]
 
-    db.add_all(sales_objects)
-    db.commit()
-
     total_revenue = sum(record["revenue"] for record in records)
     total_units = sum(record["quantity"] for record in records)
+
+    db.add_all(sales_objects)
+    db.add(
+        UploadBatch(
+            batch_id=batch_id,
+            owner_id=owner_id,
+            restaurant_name=restaurant_name,
+            filename=filename,
+            content_hash=content_hash,
+            row_count=len(sales_objects),
+            total_revenue=round(total_revenue, 2),
+        )
+    )
+    db.commit()
+
     logger.info(
         "Ingested %s rows for restaurant=%s owner_id=%s batch=%s",
         len(sales_objects),
@@ -81,6 +123,49 @@ def process_upload(
         "upload_batch_id": batch_id,
         "detected_columns": metadata["detected_columns"],
     }
+
+
+def list_upload_batches(
+    db: Session,
+    owner_id: int | None,
+    restaurant_name: str | None = None,
+):
+    query = db.query(UploadBatch).filter(UploadBatch.owner_id == owner_id)
+    if restaurant_name:
+        query = query.filter(UploadBatch.restaurant_name == restaurant_name)
+    batches = query.order_by(UploadBatch.created_at.desc(), UploadBatch.id.desc()).all()
+    return [
+        {
+            "batch_id": b.batch_id,
+            "restaurant_name": b.restaurant_name,
+            "filename": b.filename,
+            "row_count": b.row_count,
+            "total_revenue": b.total_revenue,
+            "created_at": b.created_at,
+        }
+        for b in batches
+    ]
+
+
+def delete_upload_batch(db: Session, owner_id: int | None, batch_id: str) -> int:
+    """Delete a batch and its sales rows (owner-scoped). Returns rows removed."""
+    batch = (
+        db.query(UploadBatch)
+        .filter(UploadBatch.owner_id == owner_id, UploadBatch.batch_id == batch_id)
+        .first()
+    )
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Upload batch not found.")
+
+    deleted = (
+        db.query(SalesData)
+        .filter(SalesData.owner_id == owner_id, SalesData.upload_batch_id == batch_id)
+        .delete(synchronize_session=False)
+    )
+    db.delete(batch)
+    db.commit()
+    logger.info("Deleted batch %s (%s sales rows) for owner_id=%s", batch_id, deleted, owner_id)
+    return deleted
 
 
 def _read_dataframe(file_bytes: bytes, filename: str) -> pd.DataFrame:

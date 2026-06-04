@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.models import MenuItem, SalesData, User  # noqa: F401
+from app.models import MenuItem, SalesData, UploadBatch, User  # noqa: F401
 from app.services.schema_service import ensure_runtime_schema
 
 logging.basicConfig(

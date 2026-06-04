@@ -1,7 +1,17 @@
 """Application settings loaded from environment variables and backend/.env."""
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Substrings that betray a placeholder/example secret left in by mistake.
+_WEAK_SECRET_MARKERS = (
+    "replace",
+    "change-this",
+    "changeme",
+    "your-secret",
+    "placeholder",
+    "example",
+)
 
 
 class Settings(BaseSettings):
@@ -36,6 +46,22 @@ class Settings(BaseSettings):
             if normalized in {"0", "false", "no", "off", "prod", "production", "release"}:
                 return False
         return value
+
+    @model_validator(mode="after")
+    def _reject_weak_secret_in_prod(self):
+        """Fail fast rather than deploy with a guessable JWT secret.
+
+        Only enforced when DEBUG is off so local dev stays frictionless.
+        """
+        if not self.DEBUG:
+            low = (self.SECRET_KEY or "").lower()
+            if len(self.SECRET_KEY or "") < 32 or any(marker in low for marker in _WEAK_SECRET_MARKERS):
+                raise ValueError(
+                    "SECRET_KEY looks weak or is a placeholder. With DEBUG off, set a strong "
+                    "random SECRET_KEY of at least 32 characters (e.g. `python -c \"import secrets; "
+                    "print(secrets.token_urlsafe(48))\"`)."
+                )
+        return self
 
 
 settings = Settings()

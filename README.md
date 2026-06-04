@@ -45,14 +45,16 @@ The app runs at **http://localhost:5173** and proxies all `/api` calls to the ba
 
 ---
 
-## Default Login
+## Default Login (local dev only)
 
-| Field    | Value                   |
-|----------|-------------------------|
-| Email    | `admin@restaurant.com`  |
-| Password | `Admin!123`             |
+A development admin (`admin@restaurant.com`) ships with the bundled SQLite DB
+for convenience. **It is for local use only — never expose it on a deployed
+instance.** Create your own admin and delete the demo one before any real use.
 
-If you need to create a fresh admin account:
+Passwords must be at least 10 characters with an uppercase letter, a lowercase
+letter, a number, and a symbol.
+
+To create a fresh admin account:
 
 ```bash
 # Windows PowerShell
@@ -175,7 +177,9 @@ python scripts/check_process.py    # run the upload pipeline in-process
 ## Production Notes
 
 The app ships with rate-limited login, bcrypt password hashing, owner-scoped data,
-env-driven CORS, a `/health` endpoint, and split production bundles. Before a serious
-deployment, also add: Alembic migrations (replacing the runtime schema guard), managed
-secrets, HTTPS/TLS termination, a CI pipeline, and observability (structured logs +
-metrics).
+env-driven CORS, a `/health` endpoint, duplicate-upload protection (content-hash
+dedupe), batch-level delete, and split production bundles. With `DEBUG` off the
+backend **refuses to start** unless `SECRET_KEY` is a strong (≥32-char) non-placeholder
+value. Before a serious deployment, also add: Alembic migrations (replacing the runtime
+schema guard), managed secrets, HTTPS/TLS termination, a CI pipeline, observability
+(structured logs + metrics), and move the JWT off `localStorage` to an httpOnly cookie.

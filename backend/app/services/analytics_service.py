@@ -1,12 +1,18 @@
 """Aggregated analytics and menu-engineering calculations."""
 
 from datetime import date
+from statistics import median
 from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.sales import SalesData
+
+# Items selling fewer than this many units over the whole period are too
+# sparsely sampled to classify reliably, so they are excluded from the
+# threshold math (a single sale should not define a "Puzzle").
+MIN_CLASSIFY_QUANTITY = 3
 
 
 def _apply_filters(
@@ -111,8 +117,6 @@ def get_menu_engineering_classification(
     results = query.group_by(SalesData.item_name).all()
 
     valid_items = []
-    total_popularity = 0
-    total_profitability = 0.0
 
     for row in results:
         qty = row.total_quantity or 0
@@ -125,8 +129,6 @@ def get_menu_engineering_classification(
         avg_unit_cost = cogs / qty if qty > 0 else 0.0
         profit_per_unit = avg_unit_revenue - avg_unit_cost
 
-        total_popularity += qty
-        total_profitability += profit_per_unit
         valid_items.append(
             {
                 "item_name": row.item_name,
@@ -138,13 +140,17 @@ def get_menu_engineering_classification(
             }
         )
 
-    n_valid = len(valid_items)
-    avg_popularity = total_popularity / n_valid if n_valid else 0
-    avg_profitability = total_profitability / n_valid if n_valid else 0
+    # Thresholds use the MEDIAN, not the mean: one very-high-margin outlier
+    # (e.g. a Rs 750 special) would otherwise drag the mean up and push
+    # genuinely profitable items into the wrong quadrant. Sparsely-sampled
+    # items are excluded from the threshold population but still classified.
+    sample = [i for i in valid_items if i["total_quantity"] >= MIN_CLASSIFY_QUANTITY] or valid_items
+    threshold_popularity = median(i["total_quantity"] for i in sample) if sample else 0
+    threshold_profitability = median(i["profit"] for i in sample) if sample else 0
 
     for item in valid_items:
-        high_popularity = item["total_quantity"] >= avg_popularity
-        high_profitability = item["profit"] >= avg_profitability
+        high_popularity = item["total_quantity"] >= threshold_popularity
+        high_profitability = item["profit"] >= threshold_profitability
 
         if high_popularity and high_profitability:
             item["category"] = "Star"
