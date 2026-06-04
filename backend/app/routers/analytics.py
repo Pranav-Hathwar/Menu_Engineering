@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.sales import SalesData
 from app.models.user import User
-from app.schemas.analytics import BusinessInsight, ItemClassification, ItemRecommendation, SalesSummary
+from app.schemas.analytics import BusinessInsight, DailySales, ItemClassification, ItemRecommendation, SalesSummary
 from app.services.analytics_service import (
     get_business_insights,
+    get_daily_sales,
     get_menu_engineering_classification,
     get_sales_summary,
 )
@@ -30,6 +31,23 @@ def get_analytics_summary(
     current_user: User = Depends(get_current_user),
 ):
     return get_sales_summary(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@router.get("/daily", response_model=List[DailySales])
+def get_daily_breakdown(
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    start_date: Optional[date] = Query(None, description="Starting date filter"),
+    end_date: Optional[date] = Query(None, description="Ending date filter"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_daily_sales(
         db,
         owner_id=current_user.id,
         restaurant_name=restaurant_name,

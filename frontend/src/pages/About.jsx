@@ -1,4 +1,4 @@
-import { BarChart3, BrainCircuit, Server, Target, UploadCloud } from 'lucide-react';
+import { BarChart3, BrainCircuit, Download, Server, Target, UploadCloud } from 'lucide-react';
 
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
@@ -18,6 +18,14 @@ export default function About() {
                     <p className="text-white/75 text-base max-w-2xl mt-3">
                         A deterministic analytics workspace that converts messy restaurant sales exports into menu-engineering decisions.
                     </p>
+                    <a
+                        href="/MenuMind_Methodology.pdf"
+                        download="MenuMind_Methodology.pdf"
+                        className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-md font-semibold bg-white text-ink-900 hover:bg-primary-100 transition-colors duration-200 shadow-sm"
+                    >
+                        <Download className="w-4 h-4" />
+                        Download Methodology PDF
+                    </a>
                 </div>
             </section>
 

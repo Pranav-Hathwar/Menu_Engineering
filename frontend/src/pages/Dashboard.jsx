@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertCircle, DollarSign, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { AlertCircle, ArrowDownUp, CalendarDays, DollarSign, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
 
 import api from '../services/api';
 import { MenuMatrix } from '../components/MenuMatrix';
@@ -9,12 +9,21 @@ import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
-import { asArray, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
+import { asArray, dateLabel, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
+
+const DAILY_SORTS = {
+    'date-desc': { label: 'Newest first', compare: (a, b) => String(b.date).localeCompare(String(a.date)) },
+    'date-asc': { label: 'Oldest first', compare: (a, b) => String(a.date).localeCompare(String(b.date)) },
+    'revenue-desc': { label: 'Revenue: high → low', compare: (a, b) => toNumber(b.total_revenue) - toNumber(a.total_revenue) },
+    'revenue-asc': { label: 'Revenue: low → high', compare: (a, b) => toNumber(a.total_revenue) - toNumber(b.total_revenue) },
+};
 
 export default function Dashboard() {
     const activeRestaurant = useActiveRestaurant();
     const [classifications, setClassifications] = useState([]);
     const [insights, setInsights] = useState([]);
+    const [daily, setDaily] = useState([]);
+    const [dailySort, setDailySort] = useState('date-desc');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -24,18 +33,21 @@ export default function Dashboard() {
                 setLoading(false);
                 setClassifications([]);
                 setInsights([]);
+                setDaily([]);
                 return;
             }
 
             setLoading(true);
             try {
                 const query = `restaurant_name=${encodeURIComponent(activeRestaurant)}`;
-                const [classificationResponse, insightsResponse] = await Promise.all([
+                const [classificationResponse, insightsResponse, dailyResponse] = await Promise.all([
                     api.get(`/analytics/classification?${query}`),
                     api.get(`/analytics/insights?${query}`),
+                    api.get(`/analytics/daily?${query}`),
                 ]);
                 setClassifications(asArray(classificationResponse.data));
                 setInsights(asArray(insightsResponse.data));
+                setDaily(asArray(dailyResponse.data));
                 setError(null);
             } catch (err) {
                 setError(getErrorMessage(err, "Failed to load analytics. Check the backend connection and selected restaurant."));
@@ -78,6 +90,20 @@ export default function Dashboard() {
             { name: 'Dogs', value: counts.Dog, color: '#dc4a4a' },
         ].filter(d => d.value > 0);
     }, [classifications]);
+
+    const sortedDaily = useMemo(() => {
+        const compare = (DAILY_SORTS[dailySort] || DAILY_SORTS['date-desc']).compare;
+        return [...daily].sort(compare);
+    }, [daily, dailySort]);
+
+    const dailyTotals = useMemo(() => daily.reduce(
+        (acc, day) => ({
+            revenue: acc.revenue + toNumber(day?.total_revenue),
+            quantity: acc.quantity + toNumber(day?.total_quantity),
+            profit: acc.profit + toNumber(day?.total_profit),
+        }),
+        { revenue: 0, quantity: 0, profit: 0 },
+    ), [daily]);
 
     return (
         <div className="space-y-7 pb-10">
@@ -172,6 +198,62 @@ export default function Dashboard() {
                                 </div>
                             </Card>
                         </div>
+                    )}
+
+                    {!loading && daily.length > 0 && (
+                        <Card className="p-6 border-slate-200">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+                                <div className="flex items-center gap-2">
+                                    <CalendarDays className="w-4 h-4 text-primary-600" />
+                                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Daily Sales Breakdown</h3>
+                                    <span className="text-xs font-semibold text-slate-400">({daily.length} day{daily.length === 1 ? '' : 's'})</span>
+                                </div>
+                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                    <ArrowDownUp className="w-3.5 h-3.5" />
+                                    <span className="uppercase tracking-widest">Sort</span>
+                                    <select
+                                        value={dailySort}
+                                        onChange={(e) => setDailySort(e.target.value)}
+                                        className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
+                                    >
+                                        {Object.entries(DAILY_SORTS).map(([key, { label }]) => (
+                                            <option key={key} value={key}>{label}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-slate-200 text-left text-xs font-bold uppercase tracking-widest text-slate-400">
+                                            <th className="py-2.5 pr-4 font-bold">Date</th>
+                                            <th className="py-2.5 px-4 text-right font-bold">Units</th>
+                                            <th className="py-2.5 px-4 text-right font-bold">Revenue</th>
+                                            <th className="py-2.5 pl-4 text-right font-bold">Est. Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {sortedDaily.map((day) => (
+                                            <tr key={text(day?.date)} className="text-slate-700 hover:bg-slate-50">
+                                                <td className="py-2.5 pr-4 font-semibold text-slate-900">{dateLabel(day?.date)}</td>
+                                                <td className="py-2.5 px-4 text-right tabular-nums">{integer(day?.total_quantity)}</td>
+                                                <td className="py-2.5 px-4 text-right tabular-nums">{money(day?.total_revenue)}</td>
+                                                <td className="py-2.5 pl-4 text-right tabular-nums text-emerald-700">{money(day?.total_profit)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr className="border-t-2 border-slate-200 font-bold text-slate-900">
+                                            <td className="py-3 pr-4 uppercase text-xs tracking-widest text-slate-500">Month total</td>
+                                            <td className="py-3 px-4 text-right tabular-nums">{integer(dailyTotals.quantity)}</td>
+                                            <td className="py-3 px-4 text-right tabular-nums">{money(dailyTotals.revenue)}</td>
+                                            <td className="py-3 pl-4 text-right tabular-nums text-emerald-700">{money(dailyTotals.profit)}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </Card>
                     )}
 
                     <div className="pt-3">

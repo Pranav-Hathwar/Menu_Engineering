@@ -3,12 +3,21 @@ app/schemas/analytics.py
 
 Pydantic schemas for formatting analytics engine outputs.
 """
+from datetime import date
+
 from pydantic import BaseModel
 
 class SalesSummary(BaseModel):
     item_name: str
     total_quantity: int
     total_revenue: float
+
+class DailySales(BaseModel):
+    date: date
+    total_revenue: float
+    total_quantity: int
+    total_profit: float
+    line_items: int
 
 class ItemClassification(BaseModel):
     item_name: str

@@ -48,6 +48,21 @@ export function asArray(value) {
 }
 
 /**
+ * Format an ISO date (e.g. "2026-06-01") as "01 Jun 2026". Never throws;
+ * returns `fallback` for anything unparseable.
+ */
+export function dateLabel(value, fallback = '—') {
+  if (value === null || value === undefined || value === '') return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return text(value, fallback);
+  return parsed.toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+/**
  * Extract a human-readable message from an Axios/API error.
  * FastAPI returns `detail` as either a string OR an array of validation
  * objects ({ msg, loc, ... }); rendering the array directly crashes React,

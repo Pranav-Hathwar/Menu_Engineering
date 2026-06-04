@@ -53,6 +53,47 @@ def get_sales_summary(
     ]
 
 
+def get_daily_sales(
+    db: Session,
+    owner_id: int | None = None,
+    restaurant_name: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+):
+    """Per-day totals so a monthly upload can be reviewed day by day.
+
+    Even when a whole month is submitted in one file, each row carries its own
+    ``date``; grouping by that column yields one total per calendar day. Returns
+    rows ordered newest-first; the frontend offers re-sorting.
+    """
+    query = db.query(
+        SalesData.date,
+        func.sum(SalesData.revenue).label("total_revenue"),
+        func.sum(SalesData.quantity).label("total_quantity"),
+        func.sum(SalesData.unit_cost * SalesData.quantity).label("total_cost"),
+        func.count(SalesData.id).label("line_items"),
+    )
+    query = _apply_filters(query, owner_id, restaurant_name, start_date, end_date)
+    results = query.group_by(SalesData.date).order_by(SalesData.date.desc()).all()
+
+    daily = []
+    for row in results:
+        if row.date is None:
+            continue
+        revenue = row.total_revenue or 0.0
+        cost = row.total_cost or 0.0
+        daily.append(
+            {
+                "date": row.date,
+                "total_revenue": revenue,
+                "total_quantity": int(row.total_quantity or 0),
+                "total_profit": revenue - cost,
+                "line_items": int(row.line_items or 0),
+            }
+        )
+    return daily
+
+
 def get_menu_engineering_classification(
     db: Session,
     owner_id: int | None = None,

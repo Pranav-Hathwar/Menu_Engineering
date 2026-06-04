@@ -28,3 +28,7 @@ backend/*.db
 .idea/
 Thumbs.db
 .DS_Store
+
+# Generated documentation artifact (regenerate via docs/generate_methodology_report.py).
+# The runtime copy served by the app lives in frontend/public/ and IS tracked.
+docs/*.pdf
