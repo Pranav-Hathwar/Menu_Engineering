@@ -14,6 +14,7 @@ from app.schemas.analytics import (
     DailySales,
     ItemClassification,
     ItemRecommendation,
+    MonthlyReport,
     SalesSummary,
     SalesTrends,
 )
@@ -24,6 +25,7 @@ from app.services.analytics_service import (
     get_sales_summary,
     get_sales_trends,
 )
+from app.services.report_service import get_monthly_report, list_available_months
 from app.services.auth_service import get_current_user
 from app.services.recommendation_service import get_recommendations
 
@@ -130,6 +132,30 @@ def get_trends(
         start_date=start_date,
         end_date=end_date,
     )
+
+
+@router.get("/monthly-report", response_model=MonthlyReport)
+def get_month_report(
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    month: Optional[str] = Query(None, description="Month as YYYY-MM; omit for the current month (1st → today)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_monthly_report(
+        db,
+        owner_id=current_user.id,
+        restaurant_name=restaurant_name,
+        month_key=month,
+    )
+
+
+@router.get("/months", response_model=List[str])
+def get_available_months(
+    restaurant_name: Optional[str] = Query(None, description="Restaurant filter"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return list_available_months(db, owner_id=current_user.id, restaurant_name=restaurant_name)
 
 
 @router.get("/restaurants", response_model=List[str])

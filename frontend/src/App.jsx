@@ -8,6 +8,7 @@ import Upload from './pages/Upload';
 import Insights from './pages/Insights';
 import Catalog from './pages/Catalog';
 import Recipes from './pages/Recipes';
+import MonthlyReport from './pages/MonthlyReport';
 import RawData from './pages/RawData';
 import About from './pages/About';
 import DashboardLayout from './layout/DashboardLayout';
@@ -37,6 +38,7 @@ function AppRoutes() {
                 <Route path="insights" element={<Insights />} />
                 <Route path="menu" element={<Catalog />} />
                 <Route path="recipes" element={<Recipes />} />
+                <Route path="report" element={<MonthlyReport />} />
                 <Route path="about" element={<About />} />
             </Route>
 

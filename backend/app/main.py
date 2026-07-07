@@ -39,13 +39,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routers import analytics, auth, recipes, sales, upload  # noqa: E402
+from app.routers import analytics, auth, ingest, maintenance, recipes, sales, upload  # noqa: E402
+from app.services.email_ingest_service import start_background_poller  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(sales.router, prefix="/api/sales", tags=["Sales"])
 app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(recipes.router, prefix="/api/recipes", tags=["Recipes"])
+app.include_router(ingest.router, prefix="/api/ingest", tags=["Email Ingestion"])
+app.include_router(maintenance.router, prefix="/api/data", tags=["Data Retention"])
+
+
+@app.on_event("startup")
+def _start_email_ingestion():
+    # No-op unless INGEST_ENABLED=true and the inbox is configured in .env.
+    start_background_poller()
 
 
 @app.get("/", tags=["Health"])

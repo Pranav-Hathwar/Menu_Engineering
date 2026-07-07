@@ -104,6 +104,23 @@ recipe, all analytics use its live recipe cost instead of the flat `unit_cost`
 from the uploaded file — update one ingredient price and every affected item's
 margin recalculates instantly. Recipe-costed items are badged in the Catalog.
 
+### Email Auto-Ingestion (daily POS reports)
+Point the POS's scheduled daily report at a dedicated inbox, then set
+`INGEST_EMAIL`, `INGEST_EMAIL_PASSWORD` (an app password), and
+`INGEST_ENABLED=true` in `backend/.env`. The backend polls the inbox every
+`INGEST_POLL_MINUTES`, ingests CSV/Excel/JSON attachments through the normal
+upload pipeline (so duplicate reports are rejected automatically), and shows
+status + a "Check inbox now" button on the Upload page. Optionally restrict
+accepted senders with `INGEST_ALLOWED_SENDERS`.
+
+### Monthly Reports & Data Retention
+The **Monthly Report** page shows item-wise totals for any month with data —
+or the running month (1st → today) at any time — with CSV export and print.
+A reminder banner appears on the Dashboard at month end and again in the first
+days of the new month. MenuMind keeps the **current and previous month** of
+data; anything older is flagged on the Dashboard and deleted only after the
+owner explicitly confirms.
+
 ### Insights & Price Simulator
 The **Insights** page adds rule-based recommendations per item plus a
 **price/margin what-if simulator**: pick an item, move its price up to ±20%,

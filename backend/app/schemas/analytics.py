@@ -93,3 +93,32 @@ class SalesTrends(BaseModel):
     weekday: List[WeekdayPerformance]
     pareto: List[ParetoItem]
     comparison: Optional[PeriodComparison] = None
+
+
+class MonthlyReportSummary(BaseModel):
+    month: str  # "2026-07"
+    label: str  # "July 2026"
+    start_date: date
+    end_date: date
+    # True while the month is still running (report covers 1st -> today).
+    is_partial: bool
+    days_recorded: int
+    total_revenue: float
+    total_profit: float
+    total_units: int
+    item_count: int
+    best_day: Optional[DailySales] = None
+    top_item: Optional[str] = None
+
+
+class MonthlyReport(BaseModel):
+    summary: MonthlyReportSummary
+    items: List[ItemClassification]
+    daily: List[DailySales]
+
+
+class RetentionStatus(BaseModel):
+    cutoff: date
+    old_rows: int
+    old_months: List[str]
+    cleanup_due: bool

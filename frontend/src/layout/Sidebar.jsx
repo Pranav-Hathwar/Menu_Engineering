@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { ChefHat, LayoutDashboard, UploadCloud, PieChart, Utensils, HelpCircle, Database } from 'lucide-react';
+import { CalendarCheck, ChefHat, LayoutDashboard, UploadCloud, PieChart, Utensils, HelpCircle, Database } from 'lucide-react';
 
 export const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = [
@@ -9,6 +9,7 @@ export const Sidebar = ({ isOpen, setIsOpen }) => {
         { path: '/insights', label: 'Insights', icon: PieChart },
         { path: '/menu', label: 'Catalog', icon: Utensils },
         { path: '/recipes', label: 'Recipes & Costs', icon: ChefHat },
+        { path: '/report', label: 'Monthly Report', icon: CalendarCheck },
         { path: '/about', label: 'How it Works', icon: HelpCircle },
     ];
 

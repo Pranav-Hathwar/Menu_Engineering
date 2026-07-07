@@ -34,8 +34,17 @@ FEATURES
 16. Price simulator — what-if tool projecting revenue/profit impact of a price
     change under selectable demand sensitivity.
 17. Raw data viewer — inspect exactly what the parser ingested.
-18. Production hardening — refuses weak JWT secrets in production, CORS
-    allowlist, upload size limits, Docker deploy files, 26 automated tests.
+18. Email auto-ingestion — the POS emails its daily report to a dedicated
+    inbox; MenuMind polls it automatically and ingests the attachment through
+    the same parsing + duplicate-guard pipeline. "Check inbox now" button and
+    live status on the Upload page.
+19. Monthly reports — item-wise totals for any month, or the running month
+    (1st through today) at any time; CSV export and print. A reminder banner
+    appears automatically at month end / start of the new month.
+20. Two-month data retention — the app keeps the current + previous month;
+    older data is flagged and only deleted after the owner clicks OK.
+21. Production hardening — refuses weak JWT secrets in production, CORS
+    allowlist, upload size limits, Docker deploy files, 34 automated tests.
 
 TECH STACK
 ----------
@@ -43,5 +52,5 @@ Frontend : React 18, Vite, React Router, Tailwind CSS, Recharts,
            Framer Motion, Axios, Lucide icons
 Backend  : Python, FastAPI, SQLAlchemy, Pydantic v2, Pandas, PyJWT, bcrypt
 Database : SQLite (development) / PostgreSQL (production)
-Testing  : Pytest (backend, 26 tests)
+Testing  : Pytest (backend, 34 tests)
 Deploy   : Docker + docker-compose, nginx (frontend), Uvicorn (API server)

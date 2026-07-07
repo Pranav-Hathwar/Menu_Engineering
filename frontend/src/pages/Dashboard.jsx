@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bar, BarChart, Cell, ComposedChart, Legend, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertCircle, ArrowDownRight, ArrowDownUp, ArrowUpRight, CalendarDays, Download, DollarSign, FilterX, Minus, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { AlertCircle, ArrowDownRight, ArrowDownUp, ArrowUpRight, CalendarCheck, CalendarDays, Download, DollarSign, FilterX, Minus, PackageOpen, Sparkles, Trash2, TrendingUp } from 'lucide-react';
 
 import api from '../services/api';
 import { MenuMatrix } from '../components/MenuMatrix';
@@ -24,6 +25,8 @@ export default function Dashboard() {
     const [insights, setInsights] = useState([]);
     const [daily, setDaily] = useState([]);
     const [trends, setTrends] = useState(null);
+    const [months, setMonths] = useState([]);
+    const [retention, setRetention] = useState(null);
     const [dailySort, setDailySort] = useState('date-desc');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -48,16 +51,18 @@ export default function Dashboard() {
                 if (appliedRange.start) params.set('start_date', appliedRange.start);
                 if (appliedRange.end) params.set('end_date', appliedRange.end);
                 const query = params.toString();
-                const [classificationResponse, insightsResponse, dailyResponse, trendsResponse] = await Promise.all([
+                const [classificationResponse, insightsResponse, dailyResponse, trendsResponse, monthsResponse] = await Promise.all([
                     api.get(`/analytics/classification?${query}`),
                     api.get(`/analytics/insights?${query}`),
                     api.get(`/analytics/daily?${query}`),
                     api.get(`/analytics/trends?${query}`),
+                    api.get(`/analytics/months?restaurant_name=${encodeURIComponent(activeRestaurant)}`),
                 ]);
                 setClassifications(asArray(classificationResponse.data));
                 setInsights(asArray(insightsResponse.data));
                 setDaily(asArray(dailyResponse.data));
                 setTrends(trendsResponse.data && typeof trendsResponse.data === 'object' ? trendsResponse.data : null);
+                setMonths(asArray(monthsResponse.data));
                 setError(null);
             } catch (err) {
                 setError(getErrorMessage(err, "Failed to load analytics. Check the backend connection and selected restaurant."));
@@ -67,6 +72,60 @@ export default function Dashboard() {
         };
         fetchAnalytics();
     }, [activeRestaurant, appliedRange]);
+
+    useEffect(() => {
+        const fetchRetention = async () => {
+            try {
+                const res = await api.get('/data/retention');
+                setRetention(res.data && typeof res.data === 'object' ? res.data : null);
+            } catch {
+                setRetention(null);
+            }
+        };
+        fetchRetention();
+    }, []);
+
+    const clearOldData = async () => {
+        const oldMonths = asArray(retention?.old_months).join(', ');
+        const confirmed = window.confirm(
+            `MenuMind keeps only the current and previous month.\n\n` +
+            `If you want to clear last months data (${oldMonths} — ${retention?.old_rows} rows) then click OK.\n\n` +
+            `Tip: open Monthly Report and export/print those months first if you need a copy.`
+        );
+        if (!confirmed) return;
+        try {
+            await api.delete('/data/retention/old-months');
+            setRetention((r) => (r ? { ...r, cleanup_due: false, old_rows: 0, old_months: [] } : r));
+            window.dispatchEvent(new Event('restaurantUploaded'));
+        } catch (err) {
+            setError(getErrorMessage(err, 'Could not clear the old data.'));
+        }
+    };
+
+    // End-of-month / start-of-month report reminder.
+    const reportReminder = useMemo(() => {
+        const today = new Date();
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const previous = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const previousKey = `${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, '0')}`;
+
+        if (today.getDate() <= 5 && months.includes(previousKey)) {
+            const label = previous.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+            return {
+                to: `/report?month=${previousKey}`,
+                title: `${label} monthly report is ready`,
+                message: `The month has closed — review ${label}'s item-wise totals, profit, and margins.`,
+            };
+        }
+        if (today.getDate() >= lastDayOfMonth - 1) {
+            return {
+                to: '/report',
+                title: 'Month is ending — review your monthly report',
+                message: 'See the full item-wise totals from the 1st through today before the month closes.',
+            };
+        }
+        return null;
+    }, [months]);
 
     const hasRange = Boolean(appliedRange.start || appliedRange.end);
     const applyRange = () => setAppliedRange({ ...rangeDraft });
@@ -170,9 +229,44 @@ export default function Dashboard() {
                     <div className="rounded-md border border-white/15 bg-white/10 px-4 py-3">
                         <p className="text-xs uppercase tracking-widest text-white/60">Active restaurant</p>
                         <p className="font-bold text-lg truncate max-w-[280px]">{activeRestaurant || 'No data selected'}</p>
+                        <Link to="/report" className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-primary-100 hover:text-white transition-colors">
+                            <CalendarCheck className="w-3.5 h-3.5" /> View monthly report (1st → today)
+                        </Link>
                     </div>
                 </div>
             </section>
+
+            {activeRestaurant && reportReminder && (
+                <Link to={reportReminder.to} className="block">
+                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-primary-50 border border-primary-200 rounded-lg flex items-center gap-3 shadow-sm hover:bg-primary-100/70 transition-colors">
+                        <CalendarCheck className="w-5 h-5 text-primary-700 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-primary-900">{reportReminder.title}</p>
+                            <p className="text-xs text-primary-800/80 font-medium mt-0.5">{reportReminder.message}</p>
+                        </div>
+                        <span className="text-sm font-bold text-primary-700 shrink-0">View report →</span>
+                    </motion.div>
+                </Link>
+            )}
+
+            {retention?.cleanup_due && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
+                    <Trash2 className="w-5 h-5 text-amber-600 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-amber-900">
+                            Old data found: {asArray(retention.old_months).join(', ')} ({integer(retention.old_rows)} rows)
+                        </p>
+                        <p className="text-xs text-amber-800/80 font-medium mt-0.5">
+                            MenuMind keeps the current and previous month. Save those months' reports (Monthly Report → CSV/Print), then clear the old rows.
+                        </p>
+                    </div>
+                    <button onClick={clearOldData}
+                        className="shrink-0 rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700">
+                        Clear old data
+                    </button>
+                </div>
+            )}
 
             {error ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-5 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 shadow-sm">

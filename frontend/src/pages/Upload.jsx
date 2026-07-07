@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, Copy, Database, File, RefreshCw, Trash2, UploadCloud } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Copy, Database, File, Mail, RefreshCw, Trash2, UploadCloud } from 'lucide-react';
 
 import api from '../services/api';
 import { Button } from '../ui/Button';
@@ -18,6 +18,36 @@ export default function Upload() {
     const [batches, setBatches] = useState([]);
     const [batchesLoading, setBatchesLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
+
+    const [ingest, setIngest] = useState(null);
+    const [ingestRunning, setIngestRunning] = useState(false);
+    const [ingestResult, setIngestResult] = useState(null);
+
+    const fetchIngestStatus = useCallback(async () => {
+        try {
+            const res = await api.get('/ingest/status');
+            setIngest(res.data && typeof res.data === 'object' ? res.data : null);
+        } catch {
+            setIngest(null);
+        }
+    }, []);
+
+    useEffect(() => { fetchIngestStatus(); }, [fetchIngestStatus]);
+
+    const checkInboxNow = async () => {
+        setIngestRunning(true);
+        setIngestResult(null);
+        try {
+            const res = await api.post('/ingest/run');
+            setIngestResult(res.data);
+            await Promise.all([fetchIngestStatus(), fetchBatches()]);
+            window.dispatchEvent(new Event('restaurantUploaded'));
+        } catch (error) {
+            setIngestResult({ ok: false, detail: getErrorMessage(error, 'Inbox check failed.') });
+        } finally {
+            setIngestRunning(false);
+        }
+    };
 
     const fetchBatches = useCallback(async () => {
         setBatchesLoading(true);
@@ -190,6 +220,52 @@ export default function Upload() {
                     </div>
                 </Card>
             </div>
+
+            <Card className="p-6 border-slate-200">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3 min-w-0">
+                        <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${ingest?.enabled && ingest?.configured ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-100 border border-slate-200'}`}>
+                            <Mail className={`w-5 h-5 ${ingest?.enabled && ingest?.configured ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Email Auto-Ingestion</h2>
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                                    ingest?.enabled && ingest?.configured
+                                        ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                                        : 'text-slate-500 bg-slate-50 border-slate-200'
+                                }`}>
+                                    {ingest?.enabled && ingest?.configured ? 'Active' : 'Not configured'}
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium mt-1 truncate">
+                                Inbox: <span className="font-bold text-slate-700">{text(ingest?.inbox)}</span>
+                                {' '}· Restaurant: <span className="font-bold text-slate-700">{text(ingest?.restaurant_name)}</span>
+                                {ingest?.enabled && ` · checks every ${text(ingest?.poll_minutes)} min`}
+                            </p>
+                            <p className="text-xs text-slate-400 font-medium mt-0.5">
+                                Last check: {ingest?.last_check ? dateLabel(ingest.last_check) : 'never'} — {text(ingest?.last_result)}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={checkInboxNow}
+                        disabled={ingestRunning}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-ink-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-ink-800 disabled:opacity-40"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${ingestRunning ? 'animate-spin' : ''}`} />
+                        {ingestRunning ? 'Checking inbox…' : 'Check inbox now'}
+                    </button>
+                </div>
+                {ingestResult && (
+                    <div className={`mt-4 rounded-md border px-4 py-2.5 text-sm font-semibold ${ingestResult.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                        {text(ingestResult.detail)}
+                        {asArray(ingestResult.details).map((line, index) => (
+                            <p key={index} className="text-xs font-medium opacity-80 mt-1">{line}</p>
+                        ))}
+                    </div>
+                )}
+            </Card>
 
             <Card className="p-6 sm:p-8 border-slate-200">
                 <div className="flex items-center justify-between mb-5">
