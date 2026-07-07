@@ -5,7 +5,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: menumind_user
-      POSTGRES_PASSWORD: menumind_pass
+      # Override in production: export POSTGRES_PASSWORD before `docker compose up`.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-menumind_pass}
       POSTGRES_DB: menumind
     ports:
       - "5432:5432"
@@ -24,7 +25,7 @@ services:
     container_name: menumind_api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://menumind_user:menumind_pass@db:5432/menumind
+      DATABASE_URL: postgresql://menumind_user:${POSTGRES_PASSWORD:-menumind_pass}@db:5432/menumind
       # Must be supplied from the host environment; compose refuses to start
       # without it. Generate one: python -c "import secrets; print(secrets.token_urlsafe(48))"
       SECRET_KEY: ${SECRET_KEY:?Set a strong SECRET_KEY in your shell before deploying}
@@ -38,6 +39,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # python is always present in the image; curl is not.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   web:
     build:
@@ -48,7 +56,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

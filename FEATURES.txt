@@ -1,0 +1,47 @@
+MENUMIND PRO — FEATURES & TECH STACK
+=====================================
+
+FEATURES
+--------
+1.  Secure accounts — signup/login with JWT tokens, bcrypt password hashing,
+    strong-password rules, and login rate-limiting (lockout after 5 failures).
+2.  Smart file ingestion — upload CSV, Excel (multi-sheet), or JSON sales
+    exports. Auto-detects headers buried under junk rows, infers item /
+    quantity / revenue / cost / date columns, and cleans currency symbols,
+    blanks, and summary rows.
+3.  Accurate date parsing — auto-detects DD/MM vs MM/DD ordering, reads ISO
+    dates and Excel serial numbers, and reports rows whose date was inferred.
+4.  Duplicate-upload guard — identical files are rejected (sha256 hash) so
+    revenue is never double-counted; explicit "upload anyway" override.
+5.  Upload batch management — list every upload and delete one as a unit.
+6.  Multi-restaurant workspaces — all data is owner-scoped, with a restaurant
+    switcher in the top bar.
+7.  Executive dashboard — revenue / profit / units cards, top revenue drivers,
+    category spread, date-range filter, and CSV export.
+8.  Revenue trend chart — daily revenue with a 7-day moving average.
+9.  Weekday performance — average revenue for each day of the week.
+10. Week-over-week comparison — last 7 days vs the prior 7 with % deltas.
+11. Menu engineering matrix — every item classified as Star / Plowhorse /
+    Puzzle / Dog using outlier-resistant median thresholds.
+12. Item catalog — searchable, filterable table with units, COGS, revenue,
+    profit, margin %, and CSV export.
+13. Recipes & costs (ingredient-level COGS) — define each dish's bill of
+    materials; margins then use live ingredient prices, so updating one price
+    recalculates every affected item's profit instantly.
+14. Rule-based recommendations — per-item actions with priority and reasoning.
+15. Business insights — top profit driver, sales trend, Pareto revenue-
+    concentration risk, category mix, and a low-margin watchlist.
+16. Price simulator — what-if tool projecting revenue/profit impact of a price
+    change under selectable demand sensitivity.
+17. Raw data viewer — inspect exactly what the parser ingested.
+18. Production hardening — refuses weak JWT secrets in production, CORS
+    allowlist, upload size limits, Docker deploy files, 26 automated tests.
+
+TECH STACK
+----------
+Frontend : React 18, Vite, React Router, Tailwind CSS, Recharts,
+           Framer Motion, Axios, Lucide icons
+Backend  : Python, FastAPI, SQLAlchemy, Pydantic v2, Pandas, PyJWT, bcrypt
+Database : SQLite (development) / PostgreSQL (production)
+Testing  : Pytest (backend, 26 tests)
+Deploy   : Docker + docker-compose, nginx (frontend), Uvicorn (API server)

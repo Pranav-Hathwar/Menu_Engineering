@@ -122,6 +122,7 @@ def process_upload(
         "total_units": int(total_units),
         "upload_batch_id": batch_id,
         "detected_columns": metadata["detected_columns"],
+        "dates_defaulted": metadata.get("dates_defaulted", 0),
     }
 
 
@@ -324,16 +325,22 @@ def _normalize_sales_records(df: pd.DataFrame):
 
     date_source = mapped.get("date")
     if date_source:
-        working["date"] = pd.to_datetime(df[date_source], errors="coerce").dt.date
+        working["date"] = _parse_dates(df[date_source])
     else:
         working["date"] = dt.date.today()
 
-    today = dt.date.today()
     working["item_name"] = working["item_name"].str.replace(r"\s+", " ", regex=True).str.title()
     working["quantity"] = working["quantity"].fillna(1).clip(lower=0).round().astype(int)
     working["revenue"] = working["revenue"].fillna(0.0).clip(lower=0).astype(float)
     working["unit_cost"] = working["unit_cost"].fillna(0.0).clip(lower=0).astype(float)
-    working["date"] = working["date"].apply(lambda value: value if pd.notna(value) else today)
+
+    # Rows whose date could not be parsed fall back to the file's most common
+    # parsed date (the batch almost certainly covers the same period), and only
+    # to "today" when no date in the file parsed at all.
+    parsed_dates = working["date"].dropna()
+    fallback_date = parsed_dates.mode().iloc[0] if not parsed_dates.empty else dt.date.today()
+    date_was_defaulted = working["date"].isna()
+    working["date"] = working["date"].apply(lambda value: value if pd.notna(value) else fallback_date)
 
     initial_rows = len(working)
     valid = working[
@@ -343,7 +350,64 @@ def _normalize_sales_records(df: pd.DataFrame):
     ]
 
     records = valid[["item_name", "quantity", "revenue", "unit_cost", "date"]].to_dict(orient="records")
-    return records, {"rows_rejected": initial_rows - len(records), "detected_columns": mapped}
+    return records, {
+        "rows_rejected": initial_rows - len(records),
+        "detected_columns": mapped,
+        # Only count defaults on rows that were actually ingested — a junk
+        # summary row with no date is rejected anyway and shouldn't alarm the user.
+        "dates_defaulted": int(date_was_defaulted[valid.index].sum()),
+    }
+
+
+def _parse_dates(series) -> pd.Series:
+    """Parse a date column accurately across common POS export formats.
+
+    Real exports mix ISO dates, US (MM/DD/YYYY) and non-US (DD/MM/YYYY)
+    orderings, and raw Excel serial numbers. Pandas' default month-first
+    reading silently mangles day-first files (03/06/2026 becomes March 6), so
+    both interpretations are tried and the one that parses MORE values wins —
+    a day > 12 anywhere in the column proves day-first, because those rows
+    only parse under that reading. Ties prefer day-first (DD/MM dominates
+    non-US POS systems, and this app formats INR currency).
+    """
+    raw = pd.Series(series)
+    text_values = raw.astype(str).str.strip()
+
+    month_first = _to_datetime(text_values, dayfirst=False)
+    day_first = _to_datetime(text_values, dayfirst=True)
+
+    # Year-first values (ISO "2026-06-10") are unambiguous, and pandas'
+    # dayfirst=True actively misreads them (June 10 becomes October 6), so a
+    # mostly year-first column always takes the month-first parse.
+    year_first_ratio = text_values.str.match(r"\d{4}[-/.]").mean()
+    if year_first_ratio >= 0.5:
+        parsed = month_first
+    elif day_first.notna().sum() >= month_first.notna().sum():
+        parsed = day_first
+    else:
+        parsed = month_first
+
+    # Excel serial day numbers (e.g. 46081 == 2026-03-01). Only plausible
+    # modern values are converted so ordinary IDs aren't misread as dates.
+    numeric = pd.to_numeric(raw, errors="coerce")
+    serial_mask = numeric.between(20_000, 80_000) & parsed.isna()  # ~1954..2119
+    if serial_mask.any():
+        parsed = parsed.copy()
+        parsed[serial_mask] = pd.to_datetime(
+            numeric[serial_mask], unit="D", origin="1899-12-30", errors="coerce"
+        )
+
+    return parsed.dt.date
+
+
+def _to_datetime(values: pd.Series, dayfirst: bool) -> pd.Series:
+    text_values = values.astype(str).str.strip()
+    try:
+        # format="mixed" parses each element independently, so one odd row
+        # can't force the whole column to NaT.
+        return pd.to_datetime(text_values, errors="coerce", dayfirst=dayfirst, format="mixed")
+    except (TypeError, ValueError):
+        return pd.to_datetime(text_values, errors="coerce", dayfirst=dayfirst)
 
 
 def _map_columns(df: pd.DataFrame) -> dict[str, str]:

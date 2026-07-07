@@ -15,7 +15,11 @@ export default function RawData() {
 
     useEffect(() => {
         const fetchRawData = async () => {
-            if (!activeRestaurant) return;
+            if (!activeRestaurant) {
+                setRows([]);
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
                 const response = await api.get(`/analytics/raw?restaurant_name=${encodeURIComponent(activeRestaurant)}`);

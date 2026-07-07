@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertCircle, ArrowDownUp, CalendarDays, Download, DollarSign, FilterX, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
+import { Bar, BarChart, Cell, ComposedChart, Legend, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { AlertCircle, ArrowDownRight, ArrowDownUp, ArrowUpRight, CalendarDays, Download, DollarSign, FilterX, Minus, PackageOpen, Sparkles, TrendingUp } from 'lucide-react';
 
 import api from '../services/api';
 import { MenuMatrix } from '../components/MenuMatrix';
@@ -23,6 +23,7 @@ export default function Dashboard() {
     const [classifications, setClassifications] = useState([]);
     const [insights, setInsights] = useState([]);
     const [daily, setDaily] = useState([]);
+    const [trends, setTrends] = useState(null);
     const [dailySort, setDailySort] = useState('date-desc');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -37,6 +38,7 @@ export default function Dashboard() {
                 setClassifications([]);
                 setInsights([]);
                 setDaily([]);
+                setTrends(null);
                 return;
             }
 
@@ -46,14 +48,16 @@ export default function Dashboard() {
                 if (appliedRange.start) params.set('start_date', appliedRange.start);
                 if (appliedRange.end) params.set('end_date', appliedRange.end);
                 const query = params.toString();
-                const [classificationResponse, insightsResponse, dailyResponse] = await Promise.all([
+                const [classificationResponse, insightsResponse, dailyResponse, trendsResponse] = await Promise.all([
                     api.get(`/analytics/classification?${query}`),
                     api.get(`/analytics/insights?${query}`),
                     api.get(`/analytics/daily?${query}`),
+                    api.get(`/analytics/trends?${query}`),
                 ]);
                 setClassifications(asArray(classificationResponse.data));
                 setInsights(asArray(insightsResponse.data));
                 setDaily(asArray(dailyResponse.data));
+                setTrends(trendsResponse.data && typeof trendsResponse.data === 'object' ? trendsResponse.data : null);
                 setError(null);
             } catch (err) {
                 setError(getErrorMessage(err, "Failed to load analytics. Check the backend connection and selected restaurant."));
@@ -80,7 +84,7 @@ export default function Dashboard() {
         const link = document.createElement('a');
         const suffix = hasRange ? `_${appliedRange.start || 'start'}_to_${appliedRange.end || 'end'}` : '';
         link.href = url;
-        link.download = `${activeRestaurant}_daily_sales${suffix}.csv`.replace(/\s+/g, '_');
+        link.download = `${activeRestaurant}_daily_sales${suffix}.csv`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '_');
         link.click();
         URL.revokeObjectURL(url);
     };
@@ -117,6 +121,21 @@ export default function Dashboard() {
             { name: 'Dogs', value: counts.Dog, color: '#dc4a4a' },
         ].filter(d => d.value > 0);
     }, [classifications]);
+
+    const trendSeries = useMemo(() => asArray(trends?.daily).map((d) => ({
+        date: text(d?.date),
+        label: shortDate(d?.date),
+        revenue: toNumber(d?.total_revenue),
+        ma: toNumber(d?.ma_revenue),
+    })), [trends]);
+
+    const weekdaySeries = useMemo(() => asArray(trends?.weekday).map((d) => ({
+        weekday: text(d?.weekday, '').slice(0, 3),
+        avg_revenue: toNumber(d?.avg_revenue),
+        days_observed: toNumber(d?.days_observed),
+    })), [trends]);
+
+    const comparison = trends?.comparison || null;
 
     const sortedDaily = useMemo(() => {
         const compare = (DAILY_SORTS[dailySort] || DAILY_SORTS['date-desc']).compare;
@@ -260,6 +279,70 @@ export default function Dashboard() {
                         </div>
                     )}
 
+                    {!loading && comparison && (
+                        <Card className="p-5 border-slate-200">
+                            <div className="flex items-center gap-2 mb-4">
+                                <TrendingUp className="w-4 h-4 text-primary-600" />
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Week-over-week</h3>
+                                <span className="text-xs font-semibold text-slate-400">
+                                    {dateLabel(comparison.current_start)} – {dateLabel(comparison.current_end)} vs {dateLabel(comparison.previous_start)} – {dateLabel(comparison.previous_end)}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <DeltaStat label="Revenue" current={money(comparison.current_revenue)} previous={money(comparison.previous_revenue)} changePct={comparison.revenue_change_pct} />
+                                <DeltaStat label="Est. Profit" current={money(comparison.current_profit)} previous={money(comparison.previous_profit)} changePct={comparison.profit_change_pct} />
+                                <DeltaStat label="Units Sold" current={integer(comparison.current_units)} previous={integer(comparison.previous_units)} changePct={comparison.units_change_pct} />
+                            </div>
+                        </Card>
+                    )}
+
+                    {!loading && trendSeries.length > 1 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                            <Card className="lg:col-span-2 p-6 border-slate-200">
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-1">Revenue Trend</h3>
+                                <p className="text-xs text-slate-400 font-semibold mb-5">Daily revenue with a 7-day moving average</p>
+                                <div className="h-[280px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={trendSeries} margin={{ top: 4, right: 4, left: -6, bottom: 0 }}>
+                                            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} minTickGap={24} />
+                                            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs ${value}`} width={72} />
+                                            <Tooltip
+                                                cursor={{ fill: '#f1f5f9' }}
+                                                formatter={(value, name) => [money(value), name]}
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 18px 45px -30px rgba(0,0,0,0.35)' }}
+                                            />
+                                            <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} iconType="circle" />
+                                            <Bar dataKey="revenue" name="Daily revenue" fill="#5cc9a7" radius={[3, 3, 0, 0]} maxBarSize={22} />
+                                            <Line dataKey="ma" name="7-day average" stroke="#0f9f7a" strokeWidth={2} dot={false} type="monotone" />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+
+                            <Card className="p-6 border-slate-200">
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-1">Weekday Performance</h3>
+                                <p className="text-xs text-slate-400 font-semibold mb-5">Average revenue per day of week</p>
+                                <div className="h-[280px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={weekdaySeries} margin={{ top: 4, right: 4, left: -6, bottom: 0 }}>
+                                            <XAxis dataKey="weekday" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                                            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs ${value}`} width={72} />
+                                            <Tooltip
+                                                cursor={{ fill: '#f1f5f9' }}
+                                                formatter={(value, name, entry) => [
+                                                    `${money(value)} avg over ${integer(entry?.payload?.days_observed)} day(s)`,
+                                                    'Avg revenue',
+                                                ]}
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 18px 45px -30px rgba(0,0,0,0.35)' }}
+                                            />
+                                            <Bar dataKey="avg_revenue" name="Avg revenue" fill="#0f9f7a" radius={[3, 3, 0, 0]} maxBarSize={26} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
                     {!loading && daily.length > 0 && (
                         <Card className="p-6 border-slate-200">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
@@ -345,6 +428,38 @@ export default function Dashboard() {
                     </div>
                 </>
             )}
+        </div>
+    );
+}
+
+function shortDate(value) {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return text(value, '');
+    return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+}
+
+function DeltaStat({ label, current, previous, changePct }) {
+    const pct = changePct === null || changePct === undefined ? null : toNumber(changePct);
+    const up = pct !== null && pct > 0;
+    const down = pct !== null && pct < 0;
+    const Icon = up ? ArrowUpRight : down ? ArrowDownRight : Minus;
+    const tone = up ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+        : down ? 'text-red-700 bg-red-50 border-red-200'
+        : 'text-slate-600 bg-slate-50 border-slate-200';
+
+    return (
+        <div className="rounded-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
+            <div className="flex items-end justify-between gap-2 mt-1.5">
+                <div>
+                    <p className="text-lg font-black text-slate-900 tabular-nums leading-tight">{current}</p>
+                    <p className="text-xs text-slate-400 font-semibold tabular-nums mt-0.5">was {previous}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold tabular-nums ${tone}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                    {pct === null ? 'n/a' : `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`}
+                </span>
+            </div>
         </div>
     );
 }

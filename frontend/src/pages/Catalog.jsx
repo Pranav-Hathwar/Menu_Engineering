@@ -4,8 +4,8 @@ import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
 import api from '../services/api';
 import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
-import { AlertCircle, ListFilter } from 'lucide-react';
-import { asArray, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
+import { AlertCircle, Download, ListFilter } from 'lucide-react';
+import { asArray, decimal, getErrorMessage, integer, money, toNumber, text } from '../utils/format';
 
 export default function Catalog() {
     const activeRestaurant = useActiveRestaurant();
@@ -19,7 +19,11 @@ export default function Catalog() {
 
     useEffect(() => {
         const fetchCatalog = async () => {
-            if (!activeRestaurant) return;
+            if (!activeRestaurant) {
+                setItems([]);
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
                 const response = await api.get(`/analytics/classification?restaurant_name=${encodeURIComponent(activeRestaurant)}`);
@@ -34,6 +38,34 @@ export default function Catalog() {
         };
         fetchCatalog();
     }, [activeRestaurant]);
+
+    const visibleItems = items.filter(item => {
+        const matchesSearch = text(item?.item_name, '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCat = filterCategory === 'All' ? true : item?.category === filterCategory;
+        return matchesSearch && matchesCat;
+    });
+
+    const exportCatalogCsv = () => {
+        const quote = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+        const header = ['Item', 'Category', 'Units Sold', 'Unit COGS', 'Total Revenue', 'Total Profit', 'Margin %'];
+        const rows = visibleItems.map((item) => [
+            quote(text(item?.item_name, '')),
+            quote(text(item?.category, '')),
+            toNumber(item?.total_quantity),
+            toNumber(item?.unit_cost).toFixed(2),
+            toNumber(item?.total_revenue).toFixed(2),
+            toNumber(item?.total_profit).toFixed(2),
+            toNumber(item?.profit_margin).toFixed(1),
+        ]);
+        const csv = [header.map(quote), ...rows].map((r) => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${activeRestaurant}_catalog.csv`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '_');
+        link.click();
+        URL.revokeObjectURL(url);
+    };
 
     const getMatrixColor = (category) => {
         switch(category) {
@@ -92,7 +124,7 @@ export default function Catalog() {
                     onChange={e => setSearchTerm(e.target.value)}
                     className="w-full sm:max-w-sm px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
                 />
-                <select 
+                <select
                     value={filterCategory}
                     onChange={e => setFilterCategory(e.target.value)}
                     className="w-full sm:max-w-[200px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-colors cursor-pointer"
@@ -103,6 +135,13 @@ export default function Catalog() {
                     <option value="Puzzle">Puzzles</option>
                     <option value="Dog">Dogs</option>
                 </select>
+                <button
+                    onClick={exportCatalogCsv}
+                    disabled={visibleItems.length === 0}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-40 shrink-0"
+                >
+                    <Download className="w-4 h-4" /> Export CSV
+                </button>
             </div>
 
             {/* Strategic Advice Banner (Shows dynamically when filtered) */}
@@ -145,16 +184,11 @@ export default function Catalog() {
                                     <th scope="col" className="px-6 py-4 text-right">Unit COGS</th>
                                     <th scope="col" className="px-6 py-4 text-right">Total Revenue</th>
                                     <th scope="col" className="px-6 py-4 text-right">Total Profit</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Margin %</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100/60">
-                                {items
-                                    .filter(item => {
-                                        const matchesSearch = text(item?.item_name, '').toLowerCase().includes(searchTerm.toLowerCase());
-                                        const matchesCat = filterCategory === 'All' ? true : item?.category === filterCategory;
-                                        return matchesSearch && matchesCat;
-                                    })
-                                    .map((item, index) => (
+                                {visibleItems.map((item, index) => (
                                     <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 font-bold text-slate-700">
                                             {text(item?.item_name, 'Unnamed item')}
@@ -169,12 +203,20 @@ export default function Catalog() {
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-red-600">
                                             {money(item?.unit_cost)}
+                                            {item?.cost_source === 'recipe' && (
+                                                <span title="Cost computed from this item's recipe (live ingredient prices)" className="ml-1.5 inline-block align-middle text-[9px] font-bold uppercase tracking-wider text-primary-700 bg-primary-50 border border-primary-200 rounded px-1 py-0.5">
+                                                    recipe
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-medium text-slate-600">
                                             {money(item?.total_revenue)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/20">
-                                            {money(toNumber(item?.profit) * toNumber(item?.total_quantity))}
+                                            {money(item?.total_profit ?? toNumber(item?.profit) * toNumber(item?.total_quantity))}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-mono font-semibold text-slate-600">
+                                            {decimal(item?.profit_margin, 1)}%
                                         </td>
                                     </tr>
                                 ))}

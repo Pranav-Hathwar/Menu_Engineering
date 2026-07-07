@@ -9,3 +9,4 @@ from app.models.user import User  # noqa: F401
 from app.models.menu import MenuItem  # noqa: F401
 from app.models.sales import SalesData  # noqa: F401
 from app.models.upload_batch import UploadBatch  # noqa: F401
+from app.models.ingredient import Ingredient, RecipeLine  # noqa: F401

@@ -58,3 +58,53 @@ def test_process_upload_reads_json_records_and_generates_insights():
     assert result["rows_ingested"] == 2
     assert result["total_units"] == 16
     assert any(insight["title"] == "Revenue concentration" for insight in insights)
+
+
+def test_process_upload_parses_dayfirst_dates_correctly():
+    db, user = make_session()
+    # 13/06/2026 only parses day-first, so the whole column must be read
+    # day-first: 03/06/2026 is June 3rd, NOT March 6th.
+    payload = (
+        b"Item,Qty,Total,Date\n"
+        b"Dosa,4,400,03/06/2026\n"
+        b"Idli,6,300,13/06/2026\n"
+    )
+
+    process_upload(payload, "dayfirst.csv", db, "South Cafe", owner_id=user.id)
+
+    from app.models.sales import SalesData
+    import datetime as dt
+    dates = {row.date for row in db.query(SalesData).all()}
+    assert dates == {dt.date(2026, 6, 3), dt.date(2026, 6, 13)}
+
+
+def test_process_upload_handles_excel_serial_dates():
+    db, user = make_session()
+    # 46082 is the Excel serial for 2026-03-01.
+    payload = b"Item,Qty,Total,Date\nBurger,2,500,46082\n"
+
+    process_upload(payload, "serial.csv", db, "Serial Diner", owner_id=user.id)
+
+    from app.models.sales import SalesData
+    import datetime as dt
+    row = db.query(SalesData).first()
+    assert row.date == dt.date(2026, 3, 1)
+
+
+def test_process_upload_defaults_bad_dates_to_file_mode():
+    db, user = make_session()
+    payload = (
+        b"Item,Qty,Total,Date\n"
+        b"Pizza,2,500,2026-06-10\n"
+        b"Pasta,1,300,2026-06-10\n"
+        b"Salad,1,200,not-a-date\n"
+    )
+
+    result = process_upload(payload, "mixed.csv", db, "Fallback Bistro", owner_id=user.id)
+
+    from app.models.sales import SalesData
+    import datetime as dt
+    assert result["dates_defaulted"] == 1
+    dates = [row.date for row in db.query(SalesData).all()]
+    # The unparseable row inherits the file's most common date, not "today".
+    assert dates.count(dt.date(2026, 6, 10)) == 3

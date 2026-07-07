@@ -15,8 +15,17 @@ export const Topbar = ({ toggleSidebar }) => {
             const list = asArray(res.data).filter(Boolean);
             setRestaurants(list);
 
-            // Auto inject active selection locally if blank
-            if (list.length > 0 && !localStorage.getItem('activeRestaurant')) {
+            // Reconcile the stored selection with reality: pick the first
+            // restaurant when nothing is selected OR the selected one no
+            // longer exists (e.g. its last upload batch was deleted).
+            const stored = localStorage.getItem('activeRestaurant') || '';
+            if (list.length === 0) {
+                if (stored) {
+                    localStorage.removeItem('activeRestaurant');
+                    setActive('');
+                    window.dispatchEvent(new Event('restaurantChanged'));
+                }
+            } else if (!stored || !list.includes(stored)) {
                 const first = list[0];
                 localStorage.setItem('activeRestaurant', first);
                 setActive(first);
@@ -72,7 +81,7 @@ export const Topbar = ({ toggleSidebar }) => {
                     <p className="text-sm font-semibold text-slate-700">{user?.email || 'Admin User'}</p>
                     <p className="text-xs text-slate-500">MenuMind Administrator</p>
                 </div>
-                <div className="w-9 h-9 bg-ink-900 rounded-md flex items-center justify-center border border-ink-900 shrink-0 shadow-sm hidden sm:flex">
+                <div className="w-9 h-9 bg-ink-900 rounded-md items-center justify-center border border-ink-900 shrink-0 shadow-sm hidden sm:flex">
                     <User className="w-5 h-5 text-primary-100" />
                 </div>
                 

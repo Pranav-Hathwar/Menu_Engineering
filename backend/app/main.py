@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.models import MenuItem, SalesData, UploadBatch, User  # noqa: F401
+from app.models import Ingredient, MenuItem, RecipeLine, SalesData, UploadBatch, User  # noqa: F401
 from app.services.schema_service import ensure_runtime_schema
 
 logging.basicConfig(
@@ -39,12 +39,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routers import analytics, auth, sales, upload  # noqa: E402
+from app.routers import analytics, auth, recipes, sales, upload  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(sales.router, prefix="/api/sales", tags=["Sales"])
 app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(recipes.router, prefix="/api/recipes", tags=["Recipes"])
 
 
 @app.get("/", tags=["Health"])

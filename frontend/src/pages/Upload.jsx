@@ -5,7 +5,7 @@ import { AlertCircle, CheckCircle2, Copy, Database, File, RefreshCw, Trash2, Upl
 import api from '../services/api';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { asArray, dateLabel, getErrorMessage, integer, money, text } from '../utils/format';
+import { asArray, dateLabel, getErrorMessage, integer, money, text, toNumber } from '../utils/format';
 
 export default function Upload() {
     const [file, setFile] = useState(null);
@@ -263,12 +263,19 @@ function StatusPanel({ type, title, message, result }) {
                 <h3 className="text-sm font-bold">{title}</h3>
                 <p className="text-sm mt-1 opacity-90">{message}</p>
                 {result && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                        <MiniStat label="Rows" value={integer(result?.rows_ingested)} />
-                        <MiniStat label="Rejected" value={integer(result?.rows_rejected)} />
-                        <MiniStat label="Revenue" value={money(result?.total_revenue)} />
-                        <MiniStat label="Units" value={integer(result?.total_units)} />
-                    </div>
+                    <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                            <MiniStat label="Rows" value={integer(result?.rows_ingested)} />
+                            <MiniStat label="Rejected" value={integer(result?.rows_rejected)} />
+                            <MiniStat label="Revenue" value={money(result?.total_revenue)} />
+                            <MiniStat label="Units" value={integer(result?.total_units)} />
+                        </div>
+                        {toNumber(result?.dates_defaulted) > 0 && (
+                            <p className="text-xs mt-3 font-semibold opacity-80">
+                                Note: {integer(result?.dates_defaulted)} row(s) had unreadable dates and were assigned the file&apos;s most common date.
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
         </motion.div>

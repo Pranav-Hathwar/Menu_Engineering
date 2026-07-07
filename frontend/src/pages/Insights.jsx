@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, BrainCircuit, LineChart, Sparkles, Target, TrendingDown, TrendingUp } from 'lucide-react';
 
 import api from '../services/api';
+import { PriceSimulator } from '../components/PriceSimulator';
 import { useActiveRestaurant } from '../hooks/useActiveRestaurant';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
@@ -14,24 +15,30 @@ export default function Insights() {
     const activeRestaurant = useActiveRestaurant();
     const [recommendations, setRecommendations] = useState([]);
     const [insights, setInsights] = useState([]);
+    const [classifications, setClassifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchInsights = async () => {
             if (!activeRestaurant) {
+                setRecommendations([]);
+                setInsights([]);
+                setClassifications([]);
                 setLoading(false);
                 return;
             }
             setLoading(true);
             try {
                 const query = `restaurant_name=${encodeURIComponent(activeRestaurant)}`;
-                const [recommendationResponse, insightResponse] = await Promise.all([
+                const [recommendationResponse, insightResponse, classificationResponse] = await Promise.all([
                     api.get(`/analytics/recommendations?${query}`),
                     api.get(`/analytics/insights?${query}`),
+                    api.get(`/analytics/classification?${query}`),
                 ]);
                 setRecommendations(asArray(recommendationResponse.data));
                 setInsights(asArray(insightResponse.data));
+                setClassifications(asArray(classificationResponse.data));
                 setError(null);
             } catch (err) {
                 setError(getErrorMessage(err, "Failed to load recommendations."));
@@ -111,6 +118,8 @@ export default function Insights() {
                             ))}
                         </div>
                     )}
+
+                    {classifications.length > 0 && <PriceSimulator classifications={classifications} />}
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 gap-5">
                         {recommendations.map((rec, index) => (

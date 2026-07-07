@@ -78,17 +78,37 @@ Go to the **Upload** page. Drop a CSV, Excel, or JSON file exported from your PO
 
 1. Detects headers automatically, even for messy or non-standard column names.
 2. Infers which columns represent item name, quantity sold, revenue, cost, and date.
-3. Normalizes and saves every row as a structured sales record.
+3. Parses dates accurately: detects day-first (DD/MM/YYYY) vs month-first
+   columns automatically, reads ISO dates and Excel serial day numbers, and
+   assigns any unreadable date the file's most common date (reported back as
+   `dates_defaulted`).
+4. Normalizes and saves every row as a structured sales record.
 
-Accepted formats: `.csv`, `.xlsx`, `.xls`, `.json`.
+Accepted formats: `.csv`, `.xlsx`, `.xls`, `.json`. Identical re-uploads to the
+same restaurant are rejected (sha256 content hash) to prevent double-counting.
 
 ### Dashboard
 After uploading, the **Dashboard** shows:
 
-- Total revenue, profit, and order count for the selected period.
-- Revenue and profit trend charts over time.
-- Top-performing items by revenue and by profit margin.
-- Category mix breakdown.
+- Total revenue, estimated gross profit, and units sold for the selected period.
+- Week-over-week comparison cards (last 7 data days vs the prior 7).
+- Daily revenue trend chart with a 7-day moving average.
+- Weekday performance profile (average revenue per day of week).
+- Top revenue drivers, category mix, and the four-quadrant menu matrix.
+- A sortable daily breakdown table with CSV export.
+
+### Recipes & Costs (ingredient-level COGS)
+The **Recipes & Costs** page holds a per-restaurant ingredient price list and a
+recipe (bill-of-materials) builder for each menu item. When an item has a
+recipe, all analytics use its live recipe cost instead of the flat `unit_cost`
+from the uploaded file — update one ingredient price and every affected item's
+margin recalculates instantly. Recipe-costed items are badged in the Catalog.
+
+### Insights & Price Simulator
+The **Insights** page adds rule-based recommendations per item plus a
+**price/margin what-if simulator**: pick an item, move its price up to ±20%,
+choose how price-sensitive its demand is, and see the projected revenue and
+profit impact before touching the real menu.
 
 ### Menu Classification (BCG Matrix)
 The **Catalog** page classifies every menu item into one of four quadrants based on popularity (quantity sold) and profitability (net margin):

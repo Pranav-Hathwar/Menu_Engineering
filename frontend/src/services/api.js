@@ -20,9 +20,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+        const status = error.response?.status;
+        const url = error.config?.url || '';
+        // A 401 from login/register just means bad credentials — let the form
+        // show the message. Hard-redirecting here would reload the page and
+        // wipe the error before the user could read it.
+        const isCredentialCall = url.includes('/auth/login') || url.includes('/auth/register');
+        if (status === 401 && !isCredentialCall) {
             localStorage.removeItem('token');
-            window.location.href = '/login';
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }
