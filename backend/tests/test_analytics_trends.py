@@ -145,3 +145,50 @@ def test_insights_include_pareto_and_half_period_trend():
 
     assert by_title["Sales trend"]["value"] == "up"
     assert "Revenue concentration risk" in by_title
+
+
+def test_combo_items_identified_and_excluded_from_thresholds():
+    from app.services.analytics_service import is_combo_item
+
+    assert is_combo_item("Tdh")
+    assert is_combo_item("TDH Special")
+    assert is_combo_item("Veg Buffet Lunch")
+    assert is_combo_item("Family Combo Meal")
+    assert not is_combo_item("Masala Dosa")
+    assert not is_combo_item("Tandoori Roti")  # 'tdh' must match as a word, not a substring
+
+    db, user = make_session()
+    # A huge-profit TDH buffet plus modest a-la-carte items. Without the combo
+    # exclusion, TDH's Rs 400 unit profit would drag the profitability median
+    # up and turn ordinary dishes into false Dogs/Plowhorses.
+    for item, qty, revenue, cost in [
+        ("Tdh", 27, 15900.0, 500.0),
+        ("Dosa", 10, 1000.0, 40.0),
+        ("Idli", 12, 600.0, 20.0),
+        ("Coffee", 30, 900.0, 10.0),
+    ]:
+        db.add(SalesData(restaurant_name="Mint", item_name=item, quantity=qty,
+                         revenue=revenue, unit_cost=cost, date=dt.date(2025, 7, 30), owner_id=user.id))
+    db.commit()
+
+    items = {i["item_name"]: i for i in get_menu_engineering_classification(db, owner_id=user.id, restaurant_name="Mint")}
+
+    assert items["Tdh"]["item_type"] == "combo"
+    assert items["Dosa"]["item_type"] == "standard"
+    # Dosa (profit/unit 60) must classify against a-la-carte medians only —
+    # not against the TDH's ~Rs 89/unit profit.
+    assert items["Dosa"]["category"] in {"Star", "Plowhorse", "Puzzle"}
+
+
+def test_combo_items_get_dedicated_recommendation():
+    from app.services.recommendation_service import get_recommendations
+
+    db, user = make_session()
+    db.add(SalesData(restaurant_name="Mint", item_name="Tdh", quantity=27,
+                     revenue=15900.0, unit_cost=500.0, date=dt.date(2025, 7, 30), owner_id=user.id))
+    db.commit()
+
+    recs = get_recommendations(db, owner_id=user.id, restaurant_name="Mint")
+    tdh = next(r for r in recs if r["item_name"] == "Tdh")
+    assert tdh["category"] == "Combo"
+    assert "set menu" in tdh["recommendation"].lower() or "buffet" in tdh["recommendation"].lower()

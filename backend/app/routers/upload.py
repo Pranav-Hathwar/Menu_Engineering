@@ -1,5 +1,6 @@
 """File upload + batch management endpoints."""
 
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
@@ -20,6 +21,10 @@ async def upload_sales_data(
     restaurant_name: str = Form(..., min_length=1, max_length=160),
     file: UploadFile = File(...),
     allow_duplicate: bool = Form(False),
+    report_date: Optional[date] = Form(
+        None,
+        description="Date the report covers; used when the file itself has no date column.",
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -39,6 +44,7 @@ async def upload_sales_data(
         restaurant_name=restaurant_name,
         owner_id=current_user.id,
         allow_duplicate=allow_duplicate,
+        report_date=report_date,
     )
 
 

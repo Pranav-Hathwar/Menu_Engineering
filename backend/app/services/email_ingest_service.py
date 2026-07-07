@@ -128,6 +128,16 @@ def ingest_email_message(message, session_factory=None) -> dict:
     if not attachments:
         return _outcome(details=[f"Email from {sender} had no CSV/Excel/JSON attachment — ignored."])
 
+    # The email's own sent date is a strong hint for reports whose files carry
+    # no date column — a daily report emailed at closing covers that same day.
+    email_date = None
+    try:
+        sent = email.utils.parsedate_to_datetime(message.get("Date", ""))
+        if sent is not None:
+            email_date = sent.date()
+    except (TypeError, ValueError):
+        email_date = None
+
     ingested = skipped = failed = 0
     details: list[str] = []
     db = session_factory()
@@ -141,6 +151,7 @@ def ingest_email_message(message, session_factory=None) -> dict:
                     db,
                     restaurant_name=settings.INGEST_RESTAURANT_NAME,
                     owner_id=owner.id,
+                    date_hint=email_date,
                 )
                 ingested += 1
                 details.append(f"Ingested {filename}: {result['rows_ingested']} rows, revenue {result['total_revenue']}.")

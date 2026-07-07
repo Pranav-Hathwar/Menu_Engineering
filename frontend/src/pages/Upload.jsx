@@ -10,6 +10,7 @@ import { asArray, dateLabel, getErrorMessage, integer, money, text, toNumber } f
 export default function Upload() {
     const [file, setFile] = useState(null);
     const [restaurantName, setRestaurantName] = useState('');
+    const [reportDate, setReportDate] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState(null); // 'success' | 'error' | 'duplicate'
     const [message, setMessage] = useState('');
@@ -80,6 +81,7 @@ export default function Upload() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('restaurant_name', restaurantName.trim());
+        if (reportDate) formData.append('report_date', reportDate);
         if (allowDuplicate) formData.append('allow_duplicate', 'true');
 
         try {
@@ -89,6 +91,7 @@ export default function Upload() {
             setMessage(response.data.message || 'File processed successfully.');
             setFile(null);
             setRestaurantName('');
+            setReportDate('');
             window.dispatchEvent(new Event('restaurantUploaded'));
             fetchBatches();
         } catch (error) {
@@ -132,16 +135,30 @@ export default function Upload() {
 
             <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6">
                 <Card className="p-6 sm:p-8 border-slate-200">
-                    <div className="mb-6">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Restaurant / Hotel Name <span className="text-red-500">*</span></label>
-                        <input
-                            type="text"
-                            placeholder="e.g. Mint Masala"
-                            value={restaurantName}
-                            onChange={(e) => setRestaurantName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-slate-900 transition-shadow bg-white"
-                            required
-                        />
+                    <div className="mb-6 grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Restaurant / Hotel Name <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Mint Masala"
+                                value={restaurantName}
+                                onChange={(e) => setRestaurantName(e.target.value)}
+                                className="w-full px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-slate-900 transition-shadow bg-white"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Report Date <span className="text-slate-400 font-semibold">(optional)</span></label>
+                            <input
+                                type="date"
+                                value={reportDate}
+                                onChange={(e) => setReportDate(e.target.value)}
+                                className="w-full px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-slate-900 transition-shadow bg-white"
+                            />
+                            <p className="text-[11px] text-slate-400 font-medium mt-1.5">
+                                Used when the file has no date column — e.g. a daily report that only says which day it covers in its name.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="border border-dashed border-primary-500/40 rounded-lg p-10 flex flex-col items-center justify-center bg-primary-50/40 text-center hover:bg-primary-50 transition-colors relative surface-grid">
@@ -349,6 +366,14 @@ function StatusPanel({ type, title, message, result }) {
                         {toNumber(result?.dates_defaulted) > 0 && (
                             <p className="text-xs mt-3 font-semibold opacity-80">
                                 Note: {integer(result?.dates_defaulted)} row(s) had unreadable dates and were assigned the file&apos;s most common date.
+                            </p>
+                        )}
+                        {result?.date_mode && result.date_mode !== 'column' && result?.applied_date && (
+                            <p className="text-xs mt-2 font-semibold opacity-80">
+                                {result.date_mode === 'provided' && `The file has no date column — all rows were dated ${dateLabel(result.applied_date)} (the report date you entered).`}
+                                {result.date_mode === 'detected' && `The file has no date column — all rows were dated ${dateLabel(result.applied_date)} (detected from the file name/title).`}
+                                {result.date_mode === 'email-date' && `The file has no date column — all rows were dated ${dateLabel(result.applied_date)} (the email's sent date).`}
+                                {result.date_mode === 'upload-day' && `⚠ The file has no date column, so all rows were dated today (${dateLabel(result.applied_date)}). If this report is for another day, delete this batch and re-upload with the Report Date field set.`}
                             </p>
                         )}
                     </>

@@ -31,6 +31,9 @@ class ItemClassification(BaseModel):
     # "recipe" when the cost comes from a defined bill-of-materials,
     # "upload" when it is the flat unit_cost from the ingested file.
     cost_source: str = "upload"
+    # "combo" for set menus / buffets (e.g. TDH — table d'hôte) that bundle
+    # many dishes into one line; "standard" for à-la-carte items.
+    item_type: str = "standard"
     category: str
 
 class ItemRecommendation(BaseModel):

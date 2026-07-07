@@ -186,7 +186,14 @@ export default function MonthlyReport() {
                                     {items.map((item, index) => (
                                         <tr key={`${text(item?.item_name)}-${index}`} className="hover:bg-slate-50/50">
                                             <td className="px-6 py-3.5 text-xs font-mono text-slate-400">{index + 1}</td>
-                                            <td className="px-6 py-3.5 font-bold text-slate-700">{text(item?.item_name, 'Unnamed')}</td>
+                                            <td className="px-6 py-3.5 font-bold text-slate-700">
+                                                {text(item?.item_name, 'Unnamed')}
+                                                {item?.item_type === 'combo' && (
+                                                    <span title="Set menu / buffet" className="ml-1.5 inline-block align-middle text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 rounded px-1 py-0.5">
+                                                        Buffet
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-3.5 text-center">
                                                 <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset ${categoryClasses(item?.category)}`}>
                                                     {text(item?.category, '—')}

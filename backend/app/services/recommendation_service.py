@@ -31,6 +31,21 @@ def get_recommendations(
             "confidence": 0.86,
         }
 
+        if item.get("item_type") == "combo":
+            rec_data.update(
+                category="Combo",
+                recommendation=(
+                    "This is a set menu / buffet (one line covers many dishes). Track cost per cover, "
+                    "watch which buffet dishes are actually consumed, and review the per-cover price "
+                    "against à-la-carte equivalents — don't compare it item-to-item with single dishes."
+                ),
+                reason="Identified as a table d'hôte/buffet-style bundle, so per-dish menu engineering rules don't apply directly.",
+                priority="High",
+                confidence=0.9,
+            )
+            recommendations.append(rec_data)
+            continue
+
         if category == "Star":
             rec_data.update(
                 recommendation="Protect quality and feature this item in high-visibility menu positions.",

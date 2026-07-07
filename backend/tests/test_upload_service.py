@@ -108,3 +108,62 @@ def test_process_upload_defaults_bad_dates_to_file_mode():
     dates = [row.date for row in db.query(SalesData).all()]
     # The unparseable row inherits the file's most common date, not "today".
     assert dates.count(dt.date(2026, 6, 10)) == 3
+
+
+def test_dateless_file_uses_filename_date():
+    db, user = make_session()
+    # No date column anywhere — but the filename carries the report date.
+    payload = b"Item Name,Units sold,price,cost\nDosa,3,300,35\nCoffee,10,250,10\n"
+
+    result = process_upload(payload, "Sales_30-07-2025.csv", db, "Mint", owner_id=user.id)
+
+    from app.models.sales import SalesData
+    import datetime as dt
+    assert result["date_mode"] == "detected"
+    assert result["applied_date"] == "2025-07-30"
+    assert {row.date for row in db.query(SalesData).all()} == {dt.date(2025, 7, 30)}
+
+
+def test_dateless_file_uses_title_row_date():
+    db, user = make_session()
+    payload = (
+        b"Daily Sales Report - 30 7 2025,,,\n"
+        b"Item Name,Units sold,price,cost\n"
+        b"Dosa,3,300,35\n"
+    )
+
+    result = process_upload(payload, "sales123.csv", db, "Mint", owner_id=user.id)
+
+    import datetime as dt
+    from app.models.sales import SalesData
+    assert result["date_mode"] == "detected"
+    assert db.query(SalesData).first().date == dt.date(2025, 7, 30)
+
+
+def test_dateless_file_uses_provided_report_date_over_detection():
+    db, user = make_session()
+    payload = b"Item Name,Units sold,price,cost\nDosa,3,300,35\n"
+
+    import datetime as dt
+    result = process_upload(
+        payload, "Sales_01-01-2025.csv", db, "Mint", owner_id=user.id,
+        report_date=dt.date(2025, 7, 30),
+    )
+
+    from app.models.sales import SalesData
+    assert result["date_mode"] == "provided"
+    assert db.query(SalesData).first().date == dt.date(2025, 7, 30)
+
+
+def test_file_with_real_date_column_ignores_report_date():
+    db, user = make_session()
+    payload = b"Item,Qty,Total,Date\nDosa,3,300,2026-06-10\n"
+
+    import datetime as dt
+    result = process_upload(
+        payload, "sales.csv", db, "Mint", owner_id=user.id, report_date=dt.date(2025, 7, 30)
+    )
+
+    from app.models.sales import SalesData
+    assert result["date_mode"] == "column"
+    assert db.query(SalesData).first().date == dt.date(2026, 6, 10)

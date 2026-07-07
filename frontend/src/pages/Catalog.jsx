@@ -192,6 +192,11 @@ export default function Catalog() {
                                     <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 font-bold text-slate-700">
                                             {text(item?.item_name, 'Unnamed item')}
+                                            {item?.item_type === 'combo' && (
+                                                <span title="Set menu / buffet (table d'hôte): one line covers many dishes, so it is kept out of the à-la-carte quadrant thresholds" className="ml-2 inline-block align-middle text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">
+                                                    Buffet / Set Menu
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ring-1 ring-inset ${getMatrixColor(item?.category)}`}>

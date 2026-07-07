@@ -39,6 +39,8 @@ def process_upload(
     restaurant_name: str,
     owner_id: int | None = None,
     allow_duplicate: bool = False,
+    report_date: dt.date | None = None,
+    date_hint: dt.date | None = None,
 ):
     restaurant_name = restaurant_name.strip()
     content_hash = hashlib.sha256(file_bytes).hexdigest()
@@ -68,9 +70,26 @@ def process_upload(
             )
 
     dataframe = _read_dataframe(file_bytes, filename)
+
+    # Daily POS exports often carry the report date OUTSIDE the table — in the
+    # filename ("Sales_30-07-2025.xlsx") or in title rows above the header.
+    # Resolve a fallback date before those rows are discarded. Precedence:
+    # a human-entered report_date, then a date detected in filename/title
+    # text, then a soft hint (e.g. the sent date of the email that carried
+    # the file), then the upload day.
+    detected_date = _extract_context_date(filename, dataframe)
+    if report_date is not None:
+        fallback_date, fallback_source = report_date, "provided"
+    elif detected_date is not None:
+        fallback_date, fallback_source = detected_date, "detected"
+    elif date_hint is not None:
+        fallback_date, fallback_source = date_hint, "email-date"
+    else:
+        fallback_date, fallback_source = dt.date.today(), "upload-day"
+
     dataframe = _discover_headers(dataframe)
     dataframe = _normalize_columns(dataframe)
-    records, metadata = _normalize_sales_records(dataframe)
+    records, metadata = _normalize_sales_records(dataframe, fallback_date=fallback_date, fallback_source=fallback_source)
 
     if not records:
         raise HTTPException(
@@ -123,6 +142,10 @@ def process_upload(
         "upload_batch_id": batch_id,
         "detected_columns": metadata["detected_columns"],
         "dates_defaulted": metadata.get("dates_defaulted", 0),
+        # "column" when dates came from the file's own date column; otherwise
+        # "provided" / "detected" / "upload-day" with the date that was applied.
+        "date_mode": metadata.get("date_mode", "column"),
+        "applied_date": metadata.get("applied_date"),
     }
 
 
@@ -302,7 +325,12 @@ def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[:, ~pd.Index(df.columns).duplicated()]
 
 
-def _normalize_sales_records(df: pd.DataFrame):
+def _normalize_sales_records(
+    df: pd.DataFrame,
+    fallback_date: dt.date | None = None,
+    fallback_source: str = "upload-day",
+):
+    fallback_date = fallback_date or dt.date.today()
     mapped = _map_columns(df)
     working = pd.DataFrame()
     working["item_name"] = df[mapped["item_name"]].astype(str).str.strip()
@@ -327,7 +355,7 @@ def _normalize_sales_records(df: pd.DataFrame):
     if date_source:
         working["date"] = _parse_dates(df[date_source])
     else:
-        working["date"] = dt.date.today()
+        working["date"] = None
 
     working["item_name"] = working["item_name"].str.replace(r"\s+", " ", regex=True).str.title()
     working["quantity"] = working["quantity"].fillna(1).clip(lower=0).round().astype(int)
@@ -335,12 +363,18 @@ def _normalize_sales_records(df: pd.DataFrame):
     working["unit_cost"] = working["unit_cost"].fillna(0.0).clip(lower=0).astype(float)
 
     # Rows whose date could not be parsed fall back to the file's most common
-    # parsed date (the batch almost certainly covers the same period), and only
-    # to "today" when no date in the file parsed at all.
+    # parsed date (the batch almost certainly covers the same period). When the
+    # file has no usable date at all, the resolved fallback applies: a date the
+    # uploader provided, one detected in the filename/title rows, or upload day.
     parsed_dates = working["date"].dropna()
-    fallback_date = parsed_dates.mode().iloc[0] if not parsed_dates.empty else dt.date.today()
+    if not parsed_dates.empty:
+        row_fallback = parsed_dates.mode().iloc[0]
+        date_mode = "column"
+    else:
+        row_fallback = fallback_date
+        date_mode = fallback_source
     date_was_defaulted = working["date"].isna()
-    working["date"] = working["date"].apply(lambda value: value if pd.notna(value) else fallback_date)
+    working["date"] = working["date"].apply(lambda value: value if pd.notna(value) else row_fallback)
 
     initial_rows = len(working)
     valid = working[
@@ -356,7 +390,85 @@ def _normalize_sales_records(df: pd.DataFrame):
         # Only count defaults on rows that were actually ingested — a junk
         # summary row with no date is rejected anyway and shouldn't alarm the user.
         "dates_defaulted": int(date_was_defaulted[valid.index].sum()),
+        "date_mode": date_mode,
+        "applied_date": str(row_fallback) if date_mode != "column" else None,
     }
+
+
+_MONTH_NAMES = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+
+
+def _extract_context_date(filename: str, df: pd.DataFrame) -> dt.date | None:
+    """Find the report date OUTSIDE the data table: filename first (most
+    reliable, e.g. "Sales_30-07-2025.xlsx"), then the first rows of the raw
+    frame, which still include any title/metadata lines at this stage."""
+    candidates = [filename or ""]
+    candidates.append(" ".join(str(col) for col in df.columns))
+    for _, row in df.head(10).iterrows():
+        candidates.append(" ".join(str(value) for value in row.tolist() if pd.notna(value)))
+
+    for text in candidates:
+        found = _find_date_in_text(text)
+        if found:
+            return found
+    return None
+
+
+def _find_date_in_text(text: str) -> dt.date | None:
+    text = str(text).lower()
+    # "\b" can't see a boundary in "sales_30-07-2025" or "sales30072025":
+    # underscores are word characters and letters touch digits. Normalize
+    # both so the date patterns can anchor.
+    text = text.replace("_", " ")
+    text = re.sub(r"(?<=[a-z])(?=\d)|(?<=\d)(?=[a-z])", " ", text)
+
+    # ISO: 2025-07-30 (also 2025/07/30, 2025.07.30)
+    match = re.search(r"\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b", text)
+    if match:
+        return _safe_date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+
+    # Numeric with 4-digit year: 30-07-2025, 30/7/2025, 30 7 2025, 30.07.2025.
+    match = re.search(r"\b(\d{1,2})[-/. ](\d{1,2})[-/. ](20\d{2})\b", text)
+    if match:
+        first, second, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
+        # Disambiguate D/M vs M/D: a value over 12 must be the day; ties are
+        # read day-first, consistent with the column parser.
+        if first > 12 >= second:
+            return _safe_date(year, second, first)
+        if second > 12 >= first:
+            return _safe_date(year, first, second)
+        return _safe_date(year, second, first)
+
+    # Month name: "30 July 2025", "July 30, 2025", "30-Jul-25".
+    match = re.search(r"\b(\d{1,2})[-/. ]*([a-z]{3,9})[-,/. ]*(20\d{2}|\d{2})\b", text)
+    if not match:
+        match = re.search(r"\b([a-z]{3,9})[-/. ]*(\d{1,2})[-,/. ]*(20\d{2})\b", text)
+        if match:
+            month = _MONTH_NAMES.get(match.group(1)[:3])
+            if month:
+                return _safe_date(int(match.group(3)), month, int(match.group(2)))
+        return None
+    month = _MONTH_NAMES.get(match.group(2)[:3])
+    if month:
+        year = int(match.group(3))
+        if year < 100:
+            year += 2000
+        return _safe_date(year, month, int(match.group(1)))
+    return None
+
+
+def _safe_date(year: int, month: int, day: int) -> dt.date | None:
+    try:
+        candidate = dt.date(year, month, day)
+    except ValueError:
+        return None
+    # Sanity window: a "report date" decades away is a false positive.
+    if dt.date(2000, 1, 1) <= candidate <= dt.date.today() + dt.timedelta(days=366):
+        return candidate
+    return None
 
 
 def _parse_dates(series) -> pd.Series:

@@ -1,5 +1,6 @@
 """Aggregated analytics and menu-engineering calculations."""
 
+import re
 from datetime import date, timedelta
 from statistics import median
 from typing import Optional
@@ -14,6 +15,24 @@ from app.services.recipe_service import get_recipe_costs
 # sparsely sampled to classify reliably, so they are excluded from the
 # threshold math (a single sale should not define a "Puzzle").
 MIN_CLASSIFY_QUANTITY = 3
+
+# Set menus / buffets bundle many dishes into one line (e.g. "TDH" = table
+# d'hôte: a cover with starters, mains, dessert). One TDH cover is not
+# comparable to one plate of dosa, so these items are flagged as combos and
+# kept OUT of the quadrant-threshold population — otherwise a big buffet
+# price would drag the profitability threshold up and misclassify the whole
+# à-la-carte menu.
+COMBO_TOKENS = {"tdh", "buffet", "combo", "thaali"}
+COMBO_PHRASES = ("tabledhote", "tabledhôte", "setmenu", "setmeal", "mealcombo")
+
+
+def is_combo_item(item_name: str) -> bool:
+    lowered = str(item_name or "").lower()
+    tokens = set(re.findall(r"[a-z]+", lowered))
+    if tokens & COMBO_TOKENS:
+        return True
+    squashed = "".join(re.findall(r"[a-zà-ÿ]+", lowered))
+    return any(phrase in squashed for phrase in COMBO_PHRASES)
 
 
 def _apply_filters(
@@ -169,6 +188,7 @@ def get_menu_engineering_classification(
                 # Gross margin as a % of revenue; rev > 0 is guaranteed above.
                 "profit_margin": (total_profit / rev) * 100.0,
                 "cost_source": cost_source,
+                "item_type": "combo" if is_combo_item(row.item_name) else "standard",
                 "category": "",
             }
         )
@@ -176,8 +196,12 @@ def get_menu_engineering_classification(
     # Thresholds use the MEDIAN, not the mean: one very-high-margin outlier
     # (e.g. a Rs 750 special) would otherwise drag the mean up and push
     # genuinely profitable items into the wrong quadrant. Sparsely-sampled
-    # items are excluded from the threshold population but still classified.
-    sample = [i for i in valid_items if i["total_quantity"] >= MIN_CLASSIFY_QUANTITY] or valid_items
+    # items and combos/buffets (whole covers, not single dishes) are excluded
+    # from the threshold population but still classified.
+    sample = [
+        i for i in valid_items
+        if i["total_quantity"] >= MIN_CLASSIFY_QUANTITY and i["item_type"] != "combo"
+    ] or valid_items
     threshold_popularity = median(i["total_quantity"] for i in sample) if sample else 0
     threshold_profitability = median(i["profit"] for i in sample) if sample else 0
 

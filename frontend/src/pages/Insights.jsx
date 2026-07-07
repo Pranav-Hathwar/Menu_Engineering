@@ -60,6 +60,7 @@ export default function Insights() {
 
     const getCategoryIcon = (category) => {
         switch (category) {
+            case 'Combo': return <Target className="w-5 h-5 text-purple-500" />;
             case 'Star': return <Sparkles className="w-5 h-5 text-emerald-500" />;
             case 'Plowhorse': return <TrendingUp className="w-5 h-5 text-yellow-500" />;
             case 'Puzzle': return <Target className="w-5 h-5 text-blue-500" />;

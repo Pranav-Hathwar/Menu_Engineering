@@ -35,6 +35,11 @@ const Quadrant = ({ title, description, colorClass, items }) => (
                 >
                     <span className="font-bold text-slate-800 text-sm truncate mr-3 group-hover:text-primary-700 transition-colors" title={text(item?.item_name, 'Unnamed item')}>
                         {text(item?.item_name, 'Unnamed item')}
+                        {item?.item_type === 'combo' && (
+                            <span title="Set menu / buffet — one line covers many dishes" className="ml-1.5 inline-block align-middle text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 rounded px-1 py-0.5">
+                                Buffet
+                            </span>
+                        )}
                     </span>
                     <div className="text-right shrink-0 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                         <span className="block text-[11px] font-medium text-slate-500 uppercase tracking-widest mb-0.5">
